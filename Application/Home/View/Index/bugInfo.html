@@ -1,0 +1,40 @@
+<include file='header' title='bug信息'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+	<div class="box grid_6">
+		<div class="box-head"><h2>{$bug.name}-实现步骤</h2></div>
+	  	<div class="box-content">
+	  		{$bug.step}
+	  	</div>
+	</div>
+	<div class="box grid_6">
+		<div class="box-head"><h2>{$bug.name}-期望结果</h2></div>
+	  	<div class="box-content">
+	  		{$bug.expect}<br/><br/>
+            <if condition="$remark eq 1">
+                <input type="button" value="查看备注" class="button big green" onclick="remark()"/>
+            </if>
+	  	</div>
+	</div>
+    <if condition="$remark eq 1">
+        <div id="remark" title="{$bug.name}-备注">
+            {$bug.remark}
+        </div>
+        <script>
+            $( "#remark" ).dialog({
+                autoOpen: false,
+                resizable: false,
+                modal:true,
+                buttons: {
+                    关闭: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+            function remark(){
+                $( "#remark" ).dialog('open');
+            }
+        </script>
+    </if>
+</div>
+<include file='footer' />

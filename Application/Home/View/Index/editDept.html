@@ -1,0 +1,185 @@
+<include file='header' title='{$dept.name}'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="box grid_9" style="margin-left: 13%">
+        <div class="box-head"><h2>{$dept.name}-成员管理</h2></div>
+        <div class="box-content no-pad">
+            <ul class="table-toolbar">
+                <li onclick="newMember()"><a href="#"><img src="__PUBLIC__/img/icons/basic/plus.png" alt="" />添加成员</a></li>
+                <li onclick="manager()"><a href="#"><img src="__PUBLIC__/img/icons/basic/right.png" alt="" />指定主管</a></li>
+            </ul>
+            <table class="display" id="mates">
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>账户名</th>
+                    <th>性别</th>
+                    <th>联系电话</th>
+                    <th>联系邮箱</th>
+                    <th>所在团队</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <foreach name="mates" item="mate" >
+                    <tr class="odd gradeX">
+                        <td>{$mate.realname}</td>
+                        <td>{$mate.account}</td>
+                        <td class='center'>
+                            <if condition="$mate['sex'] eq 0">
+                                男
+                                <elseif condition="$mate['sex'] eq 1"/>
+                                女
+                                <else/>
+                                未知性别
+                            </if>
+                        </td>
+                        <td>{$mate.phone}</td>
+                        <td>{$mate.email}</td>
+                        <td>{$mate.team}</td>
+                        <td class='center'>
+                            <if condition="$mate['id'] eq $dept['manager']">
+                                <img src="__PUBLIC__/icon/hand.png" alt="指派新主管" onclick="manager(this)"/>
+                                <else/>
+                                <img src="__PUBLIC__/icon/shutdown.png" alt="解散该成员" data-id='{$mate.id}' onclick="disMember(this)"/>
+                            </if>
+                        </td>
+                    </tr>
+                </foreach>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="manager" title="指定新主管">
+        <form>
+            指定新队长：
+            <select name='manager' style="width: 200px">
+                <option value="0">请选择...</option>
+                <foreach name="mates" item="mate" >
+                    <if condition="$mate['id'] neq $dept['manager']">
+                        <option value="{$mate.id}" title="{$mate.account}">{$mate.realname}</option>
+                    </if>
+                </foreach>
+            </select>
+        </form>
+    </div>
+    <div id="disMember" title="解散成员">
+        是否确定解散该成员？
+    </div>
+    <div id="newMember" title="添加成员">
+        <form>
+            <p class="form-label">请选择可选的成员：</p><br/><br/>
+            <empty name="frees">
+                <font color="gray">没有可选成员</font>
+                <else />
+                <table style="width: 455px;">
+                    <thead>
+                    <tr>
+                        <td>姓名</td>
+                        <td>账户名</td>
+                        <td>性别</td>
+                        <td>所在团队</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="frees" item="mate" >
+                        <tr>
+                            <td><input type="checkbox" value="{$mate.id}" name='mates[]'><a title="{$mate.account}">　{$mate.realname}</a></td>
+                            <td>{$mate.account}</td>
+                            <td>
+                                <if condition="$mate['sex'] eq 0">
+                                    男
+                                    <elseif condition="$mate['sex'] eq 1"/>
+                                    女
+                                    <else/>
+                                    未知性别
+                                </if>
+                            </td>
+                            <td>{$mate.team}</td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </empty>
+        </form>
+    </div>
+</div>
+<script>
+    var id=0;
+    $( "#manager" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        buttons: {
+            确定: function() {
+                if($("#leader option:selected").val()==0)
+                    $.sticky("<font color='orange'>请选择想要指定的主管！</font>");
+                else {
+                    $.post("__MODULE__/Back/changeManager/dept/{$dept.id}", $("#manager form").serialize(), function (data) {
+                        $(this).dialog("close");
+                        if (data == 1)
+                            location.reload();
+                        else if (data == 0)
+                            $.sticky("<font color='orange'>抱歉，指定新主管失败！</font>");
+                    });
+                }
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#disMember" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确定: function() {
+                $.get("__MODULE__/Back/disDeptMember/id/"+id,function(data){
+                    $( this ).dialog( "close" );
+                    if(data==1)
+                        location.reload();
+                    else if(data==0)
+                        $.sticky("<font color='orange'>抱歉，解散该部门成员失败！</font>");
+                });
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#newMember" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确定: function() {
+                $.post("__MODULE__/Back/newDeptMember/dept/{$dept.id}", $("#newMember form").serialize(), function (data) {
+                    $(this).dialog("close");
+                    if (data == 1)
+                        location.reload();
+                    else if (data == 0)
+                        $.sticky("<font color='orange'>抱歉，添加新成员失败！</font>");
+                });
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    function manager(){
+        $( "#manager" ).dialog('open');
+    }
+    function disMember(member){
+        id = member.dataset.id;
+        $( "#disMember" ).dialog('open');
+    }
+    function newMember(){
+        $( "#newMember" ).dialog('open');
+    }
+    $('#mates').dataTable( {
+        "bJQueryUI": true
+    }); /* For the data tables */
+    $("#mates img").tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+    $("#mates img").attr('style','width: 20px;cursor: pointer');
+</script>
+<include file='footer' />

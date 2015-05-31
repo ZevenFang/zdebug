@@ -1,0 +1,717 @@
+<include file='header' title='个人中心'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="ad-notif-info grid_12"><p>您好，{$user.realname}。您上次登录系统的时间为: {$user.last|date="Y-m-d H:i:s",###}， 登陆的ip地址为: {$user.ip}。</p></div>
+    <!-- 我的信息 -->
+    <div class="box grid_4">
+        <div class="box-head"><h2>我的信息</h2></div>
+        <div class="box-content">
+            <br><p>角　　色：
+            <if condition="$user['permission'] eq 5">
+                超级管理员
+                <elseif condition="$user['permission'] eq 4"/>
+                管理员
+                <elseif condition="$user['permission'] eq 3"/>
+                项目经理
+                <elseif condition="$user['permission'] eq 2"/>
+                团队队长
+                <elseif condition="$user['permission'] eq 1"/>
+                普通员工
+                <else/>
+                未知身份
+            </if><br>
+            性　　别：
+            <if condition="$user['sex'] eq 0">
+                男
+                <elseif condition="$user['sex'] eq 1"/>
+                女
+                <else/>
+                未知性别
+            </if><br>
+            账&nbsp;&nbsp;户&nbsp;&nbsp;名：{$user.account}<br>
+            真实姓名：{$user.realname}<br>
+            联系电话：{$user.phone}<br>
+            联系邮箱：{$user.email}<br><br><br>
+            <input type="button" id='modInfo' class="button green" value="修改信息" />
+            <input type="button" id='modPwd' class="button orange" value="修改密码" />
+        </p>
+        </div>
+    </div>
+    <!-- 修改信息 -->
+    <div id="modInfoDialog" title="修改信息">
+        <form id="modInfoForm" method="post">
+            联系电话：<div class="form-item"><input name='phone' type="text" value="{$user.phone}" pattern="[0-9]{3,15}" required/></div>
+            <br>电子邮箱：<div class="form-item"><input name='email' type="email" value="{$user.email}" required/></div>
+            <input type="hidden" name='account' value='{$user.account}'/>
+            <br><br><div class="form-item"><input type="submit" class="button green"/></div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        $('#modInfoForm').submit(function() {
+            $.ajax({
+                type: "POST",
+                url: "__MODULE__/Back/modInfo",
+                data: $(this).serialize(),
+                success: function(data){
+                    if(data==1){
+                        $.sticky("<font color='green'>用户信息修改成功！</font>");
+                        $("#modInfoDialog").dialog( "close" );
+                    }
+                    else
+                        $.sticky("<font color='orange'>抱歉，用户信息修改失败！</font>");
+                }
+            });
+            return false;
+        });
+    </script>
+    <!-- 修改密码 -->
+    <div id="modPwdDialog" title="修改密码">
+        <form id="modPwdForm" method="post">
+            旧密码：<div class="form-item"><input name='oldPwd' type="password"/></div>
+            <br>新密码：<div class="form-item"><input name='password' type="password" placeholder="请输入不少于六位的密码"/></div>
+            <br>确认密码：<div class="form-item"><input name='rePwd' type="password"  placeholder="请输入不少于六位的密码"/></div>
+            <input type="hidden" name='account' value='{$user.account}'/>
+            <br><br><div class="form-item"><input type="submit" class="button orange"/></div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        $('#modPwdForm').submit(function() {
+            var oldPwd = $("#modPwdForm [name='oldPwd']").val();
+            var password = $("#modPwdForm [name='password']").val();
+            var password2 = $("#modPwdForm [name='rePwd']").val();
+            if(password!=password2)
+                $.sticky("<font color='orange'>输入的两次密码不一致。</font>");
+            else if(!/^.{6,30}$/.test(password))
+                $.sticky("<font color='orange'>密码必须不少于6个字符。</font>");
+            else
+                $.ajax({
+                    type: "POST",
+                    url: "__MODULE__/Back/resetPwd",
+                    data: $(this).serialize(),
+                    success: function(data){
+                        if(data==1){
+                            $.sticky("<font color='green'>密码修改成功，请使用新密码登录。</font>");
+                            $("#modPwdDialog").dialog( "close" );
+                        }else if(data==0)
+                            $.sticky("<font color='red'>旧密码输入错误。</font>");
+                        else
+                            $.sticky("<font color='orange'>抱歉，修改密码失败。</font>");
+                    }
+                });
+            return false;
+        });
+        $( "#modPwdDialog,#modInfoDialog" ).dialog({
+            autoOpen: false,
+            resizable: false
+        });
+        $("#modInfo" ).click(function() {
+            $("#modInfoDialog" ).dialog( "open" );
+        });
+        $("#modPwd" ).click(function() {
+            $("#modPwdDialog" ).dialog( "open" );
+        });
+    </script>
+    <!-- 我的部门 -->
+    <div class="box grid_4" style="height: 250px">
+        <div class="box-head"><h2>我的部门</h2></div>
+        <div class="box-content">
+            <br><br>
+            <empty name="dept">
+                抱歉您目前没有加入的部门。
+                <else />
+                部门名称：{$dept.name}<br><br>
+                所在地址：{$dept.address}<br><br>
+                部门主管：<a href='#' id='managerDialog' style="color: blue">{$manager.realname}</a><br><br>
+                客服电话：{$dept.phone}
+            </empty>
+            <br><br><br>
+        </div>
+    </div>
+    <!-- 主管信息 -->
+    <div id="managerInfo" title="{$dept.name}主管">
+        <br>角　　色：
+        <if condition="$_user['permission'] eq 5">
+            超级管理员
+            <elseif condition="$_user['permission'] eq 4"/>
+            管理员
+            <elseif condition="$manager['permission'] eq 3"/>
+            项目经理
+            <elseif condition="$manager['permission'] eq 2"/>
+            团队队长
+            <elseif condition="$manager['permission'] eq 1"/>
+            普通员工
+            <else/>
+            未知身份
+        </if><br><br>
+        性　　别：
+        <if condition="$manager['sex'] eq 0">
+            男
+            <elseif condition="$manager['sex'] eq 1"/>
+            女
+            <else/>
+            未知性别
+        </if><br><br>
+        账&nbsp;&nbsp;户&nbsp;&nbsp;名：{$manager.account}<br><br>
+        真实姓名：{$manager.realname}<br><br>
+        联系电话：{$manager.phone}<br><br>
+        联系电话：{$manager.email}<br><br><br>
+    </div>
+    <script>
+        $( "#managerInfo" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            modal:true,
+            buttons: {
+                关闭: function() {
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
+        $("#managerDialog" ).click(function() {
+            $("#managerInfo" ).dialog( "open" );
+        });
+    </script>
+    <if condition="$user['permission'] lt 4">
+        <if condition="$user['permission'] lt 3">
+            <!-- 团队成员 -->
+            <div class="box grid_4">
+                <div id="team">
+                    <h3><a href="#1">我的团队</a></h3>
+                    <div>
+                        <empty name="team">
+                            您目前没有加入的团队。
+                            <else />
+                            团队名称：{$team.name}<br>
+                            创建时间：{$team.createtime|date="Y-m-d H:i:s",###}<br>
+                            接管项目：{$project.name}<br>
+                            团队队长：<a href='#' id='leaderDialog' style="color: blue;">{$leader.realname}</a><br>
+                        </empty>
+                    </div>
+                    <foreach name="teammates" item="mate" >
+                        <h3><a href="#">{$mate.realname}</a></h3>
+                        <div>
+                            <p>角　　色：
+                                <if condition="$mate['permission'] eq 5">
+                                    超级管理员
+                                    <elseif condition="$mate['permission'] eq 4"/>
+                                    管理员
+                                    <elseif condition="$mate['permission'] eq 3"/>
+                                    项目经理
+                                    <elseif condition="$mate['permission'] eq 2"/>
+                                    团队队长
+                                    <elseif condition="$mate['permission'] eq 1"/>
+                                    普通员工
+                                    <else/>
+                                    未知身份
+                                </if><br>
+                                性　　别：
+                                <if condition="$mate['sex'] eq 0">
+                                    男
+                                    <elseif condition="$mate['sex'] eq 1"/>
+                                    女
+                                    <else/>
+                                    未知性别
+                                </if><br>
+                                账&nbsp;&nbsp;户&nbsp;&nbsp;名：{$mate.account}<br>
+                                真实姓名：{$mate.realname}<br>
+                                联系电话：{$mate.phone}<br>
+                                联系电话：{$mate.email}
+                            </p>
+                        </div>
+                    </foreach>
+                </div>
+            </div>
+        </if>
+        <!-- 团队队长信息 -->
+        <div id="leaderInfo" title="{$team.name}队长">
+            <br>角　　色：
+            <if condition="$leader['permission'] eq 5">
+                超级管理员
+                <elseif condition="$leader['permission'] eq 4"/>
+                管理员
+                <elseif condition="$leader['permission'] eq 3"/>
+                项目经理
+                <elseif condition="$leader['permission'] eq 2"/>
+                团队队长
+                <elseif condition="$leader['permission'] eq 1"/>
+                普通员工
+                <else/>
+                未知身份
+            </if><br><br>
+            性　　别：
+            <if condition="$leader['sex'] eq 0">
+                男
+                <elseif condition="$leader['sex'] eq 1"/>
+                女
+                <else/>
+                未知性别
+            </if><br><br>
+            账&nbsp;&nbsp;户&nbsp;&nbsp;名：{$leader.account}<br><br>
+            真实姓名：{$leader.realname}<br><br>
+            联系电话：{$leader.phone}<br><br>
+            联系电话：{$leader.email}<br><br><br>
+        </div>
+        <if condition="$user['permission'] eq 3">
+            <!-- 我指派出去的任务 -->
+            <div class="box grid_6">
+                <div class="box-head"><h2>指派出去的任务</h2></div>
+                <div class="box-content no-pad">
+                    <table class="display" id="myTasks">
+                        <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>指派给团队</th>
+                            <th>是否解决</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <foreach name="myTasks" item="task" >
+                            <tr class="odd gradeX">
+                                <td>{$task.name}</td>
+                                <td>
+                                    <font color="orange">
+                                        <if condition="$task['type'] eq 1">设计
+                                            <elseif condition="$task['type'] eq 2"/>开发
+                                            <elseif condition="$task['type'] eq 3"/>测试
+                                            <elseif condition="$task['type'] eq 4"/>研究
+                                            <elseif condition="$task['type'] eq 5"/>讨论
+                                            <elseif condition="$task['type'] eq 6"/>界面
+                                            <elseif condition="$task['type'] eq 7"/>事务
+                                            <else />其他
+                                        </if>
+                                    </font>
+                                </td>
+                                <td>{$task.assignedTo}</td>
+                                <td class="center" data-id="{$task.id}">
+                                    <if condition="$task['finished'] eq 1">
+                                        <font color='green'>已解决</font>
+                                        <else />
+                                        <font color='orange'>未解决</font>
+                                    </if>
+                                </td>
+                                <td>
+                                    <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/taskInfo/remark/1/id/{$task.id}'"/>
+                                    <img src="__PUBLIC__/icon/pencil.png" alt="编辑" onclick="location.href='__CONTROLLER__/editTask/id/{$task.id}'"/>
+                                    <if condition="$task['finished'] eq 0">
+                                        <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$task.id}" onclick='fireTask(this)'/>
+                                    </if>
+                                    <empty name="task.assignedTo">
+                                        <img src="__PUBLIC__/icon/begin.png" alt="指派给" data-id='{$task.id}' onclick="taskRemark(this)"/>
+                                    </empty>
+                                    <if condition="$task['finished'] eq 1">
+                                        <img src="__PUBLIC__/icon/begin.png" alt="驳回" data-id='{$task.id}' onclick="rejectTask(this)"/>
+                                    </if>
+                                </td>
+                            </tr>
+                        </foreach>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- 指派任务对话框 -->
+            <div id="taskDialog" title="分配任务">
+                <form action="post">
+                    <div class="form-row">指派给：
+                        <div class="form-item">
+                            <select name='assignedTo'>
+                                <option value='0' selected>请选择团队</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="remark" name="remark" style="width:100%;height:300px;"><font color='gray'>任务备注，可上传附件...</font></textarea>
+                    </div>
+                    <input type="submit" value="分配" class="button big green"/>
+                    <input type="button" value="取消" class="button big orange"/>
+                </form>
+            </div>
+            <script>
+                var id = 0;
+                var hasTeam = false;
+                $("#taskDialog form").submit(function(){
+                    $("#taskDialog form").append("<input type='hidden' name='id' value='"+id+"'/>");
+                    if($("#taskDialog option:selected").val()==0){
+                        $.sticky("<font color='red'>请选择一个团队！</font>");
+                        return false;
+                    }
+                    $.ajax({
+                        type: "POST",
+                        url: "__MODULE__/Back/assignTask",
+                        data: $(this).serialize(),
+                        success: function(data){
+                            if(data==0)
+                                $.sticky("<font color='orange'>抱歉，任务分配失败！</font>");
+                            else if(data==1){
+                                $( "#taskDialog" ).dialog( "close" );
+                                location.reload();
+                            }
+                        }
+                    });
+                    return false;
+                });
+                function addTeams(){
+                    $.ajax({
+                        type: "POST",
+                        url: "__MODULE__/Back/getTeams",
+                        success: function(data){
+                            var teams = JSON.parse(data);
+                            for (i=0;i<teams.length;i++)
+                                $("#taskDialog select").append("<option value='"+teams[i].id+"'>"+teams[i].name+"</option>");
+                        }
+                    });
+                }
+                $("#taskDialog input[type='button']").click(function(){
+                    $( "#taskDialog" ).dialog( "close" );
+                });
+                $( "#taskDialog" ).dialog({
+                    autoOpen: false,
+                    resizable: false,
+                    modal: true
+                });
+                function taskRemark(task){
+                    id = task.dataset.id;
+                    $( "#taskDialog" ).dialog( "open" );
+                    if(!hasTeam) {
+                        addTeams();
+                        hasTeam = true;
+                    }
+                }
+                var ue = UE.getEditor('remark',{
+                    serverUrl :"{:U('Home/Plugin/ueditor')}",
+                    toolbars: [
+                        ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                        ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+                    ]
+                });
+            </script>
+        </if>
+        <!-- 我收到的任务 -->
+        <div class="box grid_6">
+            <div class="box-head"><h2>指派给我的任务</h2></div>
+            <div class="box-content no-pad">
+                <table class="display" id="tasks">
+                    <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>类型</th>
+                        <th>指派人</th>
+                        <th>是否解决</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="tasks" item="task" >
+                        <tr class="odd gradeX">
+                            <td>{$task.name}</td>
+                            <td>
+                                <font color="orange">
+                                    <if condition="$task['type'] eq 1">设计
+                                        <elseif condition="$task['type'] eq 2"/>开发
+                                        <elseif condition="$task['type'] eq 3"/>测试
+                                        <elseif condition="$task['type'] eq 4"/>研究
+                                        <elseif condition="$task['type'] eq 5"/>讨论
+                                        <elseif condition="$task['type'] eq 6"/>界面
+                                        <elseif condition="$task['type'] eq 7"/>事务
+                                        <else />其他
+                                    </if>
+                                </font>
+                            </td>
+                            <td>{$task.assigner}</td>
+                            <td class="center" data-id="{$task.id}">
+                                <if condition="$task['finished'] eq 1">
+                                    <font color='green'>已解决</font>
+                                    <else />
+                                    <font color='orange'>未解决</font>
+                                </if>
+                            </td>
+                            <td>
+                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/taskInfo/remark/1/id/{$task.id}'"/>
+                                <if condition="$task['finished'] eq 0">
+                                    <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$task.id}" onclick='fireTask(this)'/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 指派出去的bug -->
+        <if condition="$user['permission'] gt 1">
+            <div class="box grid_6">
+                <div class="box-head"><h2>指派出去的bug</h2></div>
+                <div class="box-content no-pad">
+                    <table class="display" id="myBugs">
+                        <thead>
+                        <tr>
+                            <th>Bug标题</th>
+                            <th>类型</th>
+                            <th>指派给</th>
+                            <th>是否解决</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <foreach name="myBugs" item="bug" >
+                            <tr class="odd gradeX">
+                                <td>{$bug.name}</td>
+                                <td>
+                                    <font color="orange">
+                                        <if condition="$bug['type'] eq 1">代码错误
+                                            <elseif condition="$bug['type'] eq 2"/>界面优化
+                                            <elseif condition="$bug['type'] eq 3"/>设计缺陷
+                                            <elseif condition="$bug['type'] eq 4"/>安全相关
+                                            <elseif condition="$bug['type'] eq 5"/>性能问题
+                                            <else />其他
+                                        </if>
+                                    </font>
+                                </td>
+                                <td>{$bug.assignedTo}</td>
+                                <td class="center" data-id="{$bug.id}">
+                                    <if condition="$bug['finished'] eq 1">
+                                        <font color='green'>已解决</font>
+                                        <else />
+                                        <font color='orange'>未解决</font>
+                                    </if>
+                                </td>
+                                <td>
+                                    <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/bugInfo/remark/1/id/{$bug.id}'"/>
+                                    <img src="__PUBLIC__/icon/pencil.png" alt="编辑" onclick="location.href='__CONTROLLER__/editBug/id/{$bug.id}'"/>
+                                    <if condition="$bug['finished'] eq 0">
+                                        <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$bug.id}" onclick='fireBug(this)'/>
+                                    </if>
+                                    <if condition="$bug['finished'] eq 1">
+                                        <img src="__PUBLIC__/icon/begin.png" alt="驳回" data-id='{$bug.id}' onclick="rejectBug(this)"/>
+                                    </if>
+                                </td>
+                            </tr>
+                        </foreach>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </if>
+        <!-- 指派给我的bug -->
+        <div class="box grid_6">
+            <div class="box-head"><h2>指派给我的bug</h2></div>
+            <div class="box-content no-pad">
+                <table class="display" id="bugs">
+                    <thead>
+                    <tr>
+                        <th>Bug标题</th>
+                        <th>类型</th>
+                        <th>指派人</th>
+                        <th>是否解决</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="bugs" item="bug" >
+                        <tr class="odd gradeX">
+                            <td>{$bug.name}</td>
+                            <td>
+                                <font color="orange">
+                                    <if condition="$bug['type'] eq 1">代码错误
+                                        <elseif condition="$bug['type'] eq 2"/>界面优化
+                                        <elseif condition="$bug['type'] eq 3"/>设计缺陷
+                                        <elseif condition="$bug['type'] eq 4"/>安全相关
+                                        <elseif condition="$bug['type'] eq 5"/>性能问题
+                                        <else />其他
+                                    </if>
+                                </font>
+                            </td>
+                            <td>{$bug.assigner}</td>
+                            <td class="center" data-id="{$bug.id}">
+                                <if condition="$bug['finished'] eq 1">
+                                    <font color='green'>已解决</font>
+                                    <else />
+                                    <font color='orange'>未解决</font>
+                                </if>
+                            </td>
+                            <td>
+                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/bugInfo/remark/1/id/{$bug.id}'"/>
+                                <if condition="$bug['finished'] eq 0">
+                                    <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$bug.id}" onclick='fireBug(this)'/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 解决任务对话框 -->
+        <div id="fireTaskPrompt" title="提示">
+            是否确定已经解决这个任务？
+            <br><br>
+        </div>
+        <!-- 驳回任务对话框 -->
+        <div id="rejectTask" title="驳回任务">
+            <form method="post">
+                <div class="form-row">
+                    <textarea id="rejectTaskRemark" name="remark" style="width:100%;height:300px;"><font color='gray'>驳回理由，可上传附件...</font></textarea>
+                </div>
+                <input type="submit" value="驳回" class="button big green"/>
+                <input type="button" value="取消" class="button big orange"/>
+            </form>
+        </div>
+        <!-- 解决bug对话框 -->
+        <div id="fireBugPrompt" title="提示">
+            是否确定已经解决这个bug？
+            <br><br>
+        </div>
+        <!-- 驳回bug对话框 -->
+        <div id="rejectBug" title="驳回bug">
+            <form method="post">
+                <div class="form-row">
+                    <textarea id="rejectRemark" name="remark" style="width:100%;height:300px;"><font color='gray'>驳回理由，可上传附件...</font></textarea>
+                </div>
+                <input type="submit" value="驳回" class="button big green"/>
+                <input type="button" value="取消" class="button big orange"/>
+            </form>
+        </div>
+    </if>
+</div>
+<if condition="$user['permission'] lt 4">
+    <script type="text/javascript">
+        var id = 0;
+        $( "#leaderInfo" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            modal:true,
+            buttons: {
+                关闭: function() {
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
+        $("#leaderDialog" ).click(function() {
+            $("#leaderInfo" ).dialog( "open" );
+        });
+        $( "#team" ).accordion({ fillSpace: true });
+        $('#tasks,#myTasks,#bugs,#myBugs').dataTable( {
+            "bJQueryUI": true
+        });
+        var ue = UE.getEditor('rejectRemark',{
+            serverUrl :"{:U('Home/Plugin/ueditor')}",
+            toolbars: [
+                ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+            ]
+        });
+        var ue = UE.getEditor('rejectTaskRemark',{
+            serverUrl :"{:U('Home/Plugin/ueditor')}",
+            toolbars: [
+                ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+            ]
+        });
+        $( "#rejectTask" ).dialog({
+            autoOpen: false,
+            modal: true
+        });
+        $("#rejectTask input[type='button']").click(function(){
+            $( "#rejectTask" ).dialog( "close" );
+        });
+        $( "#rejectBug" ).dialog({
+            autoOpen: false,
+            modal: true
+        });
+        $("#rejectBug input[type='button']").click(function(){
+            $( "#rejectBug" ).dialog( "close" );
+        });
+        $( "#fireTaskPrompt" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            modal:true,
+            buttons: {
+                确定: function() {
+                    $( this ).dialog( "close" );
+                    $.get('__MODULE__/Back/fireTask/id/'+id, function(data){
+                        if(data==1){
+                            $.sticky("<font color='green'>任务完成，辛苦了~</font>");
+                            $("#myTasks td[data-id='"+id+"'],#tasks td[data-id='"+id+"']").html("<font color='green'>已解决</font>");
+                            $("#myTasks img[data-id='"+id+"'][alt='解决'],#tasks img[data-id='"+id+"'][alt='解决']").hide();
+                        }
+                        else if(data==0)
+                            $.sticky("<font color='orange'>抱歉，任务状态修改失败</font>");
+                    });
+                },
+                取消: function() {
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
+        $( "#fireBugPrompt" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            modal:true,
+            buttons: {
+                确定: function() {
+                    $( this ).dialog( "close" );
+                    $.get('__MODULE__/Back/fireBug/id/'+id, function(data){
+                        if(data==1){
+                            $.sticky("<font color='green'>bug解决成功，辛苦了~</font>");
+                            $("#myBugs td[data-id='"+id+"'],#bugs td[data-id='"+id+"']").html("<font color='green'>已解决</font>");
+                            $("#myBugs img[data-id='"+id+"'][alt='解决'],#bugs img[data-id='"+id+"'][alt='解决']").hide();
+                        }
+                        else if(data==0)
+                            $.sticky("<font color='orange'>抱歉，bug状态修改失败</font>");
+                    });
+                },
+                取消: function() {
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
+        $( "#rejectTask form" ).submit(function(){
+            $( "#rejectTask" ).dialog( "close" );
+            $.post('__MODULE__/Back/rejectTask', $(this).serialize(), function(data){
+                if(data==1){
+                    $.sticky("<font color='green'>驳回任务成功</font>");
+                    $("#myTasks td[data-id='"+id+"'],#tasks td[data-id='"+id+"']").html("<font color='orange'>未解决</font>");
+                    $("#myTasks img[data-id='"+id+"'][alt='驳回'],#tasks img[data-id='"+id+"'][alt='解决']").hide();
+                }
+                else if(data==0)
+                    $.sticky("<font color='orange'>抱歉，任务状态修改失败</font>");
+            });
+            return false;
+        });
+        $( "#rejectBug form" ).submit(function(){
+            $( "#rejectBug" ).dialog( "close" );
+            $.post('__MODULE__/Back/rejectBug', $(this).serialize(), function(data){
+                if(data==1){
+                    $.sticky("<font color='green'>驳回bug成功</font>");
+                    $("#myBugs td[data-id='"+id+"'],#bugs td[data-id='"+id+"']").html("<font color='orange'>未解决</font>");
+                    $("#myBugs img[data-id='"+id+"'][alt='驳回'],#bugs img[data-id='"+id+"'][alt='解决']").hide();
+                }
+                else if(data==0)
+                    $.sticky("<font color='orange'>抱歉，bug状态修改失败</font>");
+            });
+            return false;
+        });
+        function fireBug(check){
+            $( "#fireBugPrompt" ).dialog('open');
+            id = check.dataset.id;
+        }
+        function fireTask(check){
+            $( "#fireTaskPrompt" ).dialog('open');
+            id = check.dataset.id;
+        }
+        function rejectBug(reject){
+            $( "#rejectBug" ).dialog( "open" );
+            id = reject.dataset.id;
+            $( "#rejectBug form" ).append("<input type='hidden' name='id' value='"+id+"'/>");
+        }
+        function rejectTask(reject){
+            $( "#rejectTask" ).dialog( "open" );
+            id = reject.dataset.id;
+            $( "#rejectTask form" ).append("<input type='hidden' name='id' value='"+id+"'/>");
+        }
+        $("#tasks img,#myTasks img,#bugs img,#myBugs img").tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+        $("#tasks img,#myTasks img,#bugs img,#myBugs img").attr('style','width: 20px;cursor: pointer');
+    </script>
+</if>
+<include file='footer' />

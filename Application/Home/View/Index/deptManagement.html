@@ -1,0 +1,170 @@
+<include file='header' title='部门管理'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="box grid_9" style="margin-left: 13%">
+        <div class="box-head"><h2>部门管理</h2></div>
+        <div class="box-content no-pad">
+            <ul class="table-toolbar">
+                <li onclick="newDept()"><a href="#"><img src="__PUBLIC__/img/icons/basic/plus.png" alt="" />新建部门</a></li>
+            </ul>
+            <table class="display" id="depts">
+                <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>部门名称</th>
+                    <th>所在地址</th>
+                    <th>部门主管</th>
+                    <th>部门电话</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <foreach name="depts" item="dept" >
+                    <tr class="odd gradeX">
+                        <td>{$dept.code}</td>
+                        <td>{$dept.name}</td>
+                        <td class='center'>{$dept.address}</td>
+                        <td class="center">{$dept.manager}</td>
+                        <td class="center">{$dept.phone}</td>
+                        <td class="center">
+                            <img src="__PUBLIC__/icon/pencil.png" alt="管理" onclick="location.href='__CONTROLLER__/editDept/id/{$dept.id}'"/>　
+                            <img src="__PUBLIC__/icon/shutdown.png" alt="解散" data-id='{$dept.id}' onclick="disDept(this)"/>
+                        </td>
+                    </tr>
+                </foreach>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- 新建部门 -->
+    <div id="newDept" title="新建部门">
+        <form>
+            <div class="form-row">
+                <p class="form-label">部门名称：</p><div class="form-item"><input type="text" name='name'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">部门编号：</p><div class="form-item"><input type="text" name='code'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">部门地址：</p><div class="form-item"><input type="text" name='address'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">联系电话：</p><div class="form-item"><input type="text" name='phone'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">指定部门主管：</p>
+                <div class="form-item">
+                    <select name='manager'>
+                        <option value="0">请选择...</option>
+                        <foreach name="mates" item="mate" >
+                            <option value="{$mate.id}" title="{$mate.account}">{$mate.realname}</option>
+                        </foreach>
+                    </select></div></div>
+            <p class="form-label">选择成员：<br/>(可不勾选主管)</p><br/><br/>
+            <empty name="mates">
+                <font color="gray">没有可选成员</font>
+                <else />
+                <table style="width: 455px;">
+                    <thead>
+                    <tr>
+                        <td>姓名</td>
+                        <td>账户名</td>
+                        <td>性别</td>
+                        <td>所在团队</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="mates" item="mate" >
+                        <tr>
+                            <td><input type="checkbox" value="{$mate.id}" name='mates[]'><a title="{$mate.account}">　{$mate.realname}</a></td>
+                            <td>{$mate.account}</td>
+                            <td>
+                                <if condition="$mate['sex'] eq 0">
+                                    男
+                                    <elseif condition="$mate['sex'] eq 1"/>
+                                    女
+                                    <else/>
+                                    未知性别
+                                </if>
+                            </td>
+                            <td>{$mate.team}</td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </empty>
+        </form>
+    </div>
+    <!-- 解散部门对话框 -->
+    <div id="disDept" title="解散部门">
+        是否确定<font color="red">解散</font>该部门？
+    </div>
+</div>
+<script>
+    var id=0;
+    $( "#newDept" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        buttons: {
+            创建: function() {
+                if($("#newDept input[name='name']").val().length==0)
+                    $.sticky("<font color='orange'>请填写部门名称！</font>");
+                else if($("#newDept input[name='code']").val().length==0)
+                    $.sticky("<font color='orange'>请填写部门编号！</font>");
+                else if($("#newDept input[name='address']").val().length==0)
+                    $.sticky("<font color='orange'>请填写部门地址！</font>");
+                else if($("#newDept input[name='phone']").val().length==0)
+                    $.sticky("<font color='orange'>请填写部门联系电话！</font>");
+                else if($("#newDept option:selected").val()==0)
+                    $.sticky("<font color='orange'>请选择部门主管！</font>");
+                else{
+                    $.post("__MODULE__/Back/newDept", $("#newDept form").serialize(),function(data){
+                        if(data==1){
+                            location.reload();
+                        }else if(data==2)
+                            $.sticky("<font color='red'>已存在部门名称或编号！</font>");
+                        else if(data==0){
+                            $.sticky("<font color='orange'>抱歉，部门创建失败！</font>");
+                            $( '#newDept' ).dialog( "close" );
+                        }
+                    });
+                }
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#disDept" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确定: function() {
+                $.get("__MODULE__/Back/disDept/id/"+id, function(data){
+                    $( this ).dialog( "close" );
+                    if(data==1)
+                        location.reload();
+                    else if(data==0)
+                        $.sticky("<font color='orange'>抱歉，解散部门失败！</font>");
+                });
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    function newDept(){
+        $( "#newDept" ).dialog('open');
+    }
+    function disDept(dept){
+        id = dept.dataset.id;
+        $( "#disDept" ).dialog('open');
+    }
+    $('#depts').dataTable( {
+        "bJQueryUI": true
+    }); /* For the data tables */
+    $("#depts img").tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+    $("#depts img").attr('style','width: 20px;cursor: pointer');
+</script>
+<include file='footer' />

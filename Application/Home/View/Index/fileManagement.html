@@ -1,0 +1,104 @@
+<include file='header' title='文档管理'/>
+<!--- CONTENT AREA -->
+<empty name="project">
+    <div class="content container_12">
+        <h1 id="error-heading">Denied</h1>
+        <p id="error-desc">无权查看项目文档。<br><br>
+            您暂时没有加入任何团队。</p>
+        <p id="error-back">返回<a href="__CONTROLLER__/dashboard">个人中心</a>.
+        </p>
+    </div>
+    <else/>
+    <div class="content container_12">
+        <div class="box grid_9" style="margin-left: 13%">
+            <div class="box-head"><h2>{$project.name}-项目文档</h2></div>
+            <div class="box-content no-pad">
+                <ul class="table-toolbar">
+                    <li onclick="newDoc()"><a href="#"><img src="__PUBLIC__/img/icons/basic/plus.png" alt="" />添加文档</a></li>
+                </ul>
+                <table class="display" id="docs">
+                    <thead>
+                    <tr>
+                        <th>文档标题</th>
+                        <th>关键词</th>
+                        <th>添加者</th>
+                        <th>添加时间</th>
+                        <th>最近修改者</th>
+                        <th>最近修改时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="docs" item="doc" >
+                        <tr class="odd gradeX">
+                            <td>{$doc.name}</td>
+                            <td>{$doc.keywords}</td>
+                            <td class="center">{$doc.addedby}</td>
+                            <td class='center'>{:date('Y-m-d　H:i:s',$doc['addedtime'])}</td>
+                            <td class="center">{$doc.editedby}</td>
+                            <td class="center"><if condition="$doc['editedtime'] neq 0">{:date('Y-m-d　H:i:s',$doc['editedtime'])}</if></td>
+                            <td class="center">
+                                <img src="__PUBLIC__/icon/search.png" alt="查看" onclick="location.href='__CONTROLLER__/document/id/{$doc.id}'"/>　
+                                <img src="__PUBLIC__/icon/pencil.png" alt="编辑" onclick="location.href='__CONTROLLER__/editDoc/id/{$doc.id}'"/>　
+                                <if condition="$user['permission'] gt 3">
+                                    <img src="__PUBLIC__/icon/shutdown.png" alt="删除" data-id='{$team.id}' onclick="delDoc(this)"/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 新建文档 -->
+        <div id="newDoc" title="新建文档">
+            <form>
+                <div class="form-row">
+                    <p class="form-label">文档标题：</p><div class="form-item"><input type="text" name="name" /></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">关键词：</p><div class="form-item"><input type="text" name='keywords'/></div>
+                </div>
+                <textarea id="content" name="content" style="width:100%;height:300px;"><font color='gray'>编写文档，可上传附件...</font></textarea>
+            </form>
+        </div>
+    </div>
+</empty>
+<script>
+    $( "#newDoc" ).dialog({
+        autoOpen: false,
+        buttons: {
+            创建: function() {
+                if($("#newDoc input[name='name']").val().length==0)
+                    $.sticky("<font color='orange'>请填写文档标题！</font>");
+                else{
+                    $.post("__MODULE__/Back/newDoc", $("#newDoc form").serialize(),function(data){
+                        if(data==1){
+                            location.reload();
+                        }else if(data==2)
+                            $.sticky("<font color='red'>已存在该文档标题！</font>");
+                        else if(data==0){
+                            $.sticky("<font color='orange'>抱歉，文档创建失败！</font>");
+                            $( '#newDoc' ).dialog( "close" );
+                        }
+                    });
+                }
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    function newDoc(){
+        $( "#newDoc" ).dialog('open');
+    }
+    var ue = UE.getEditor('content',{
+        serverUrl :"{:U('Home/Plugin/ueditor')}"
+    });
+    $('#docs').dataTable( {
+        "bJQueryUI": true
+    }); /* For the data tables */
+    $("#docs img").tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+    $("#docs img").attr('style','width: 20px;cursor: pointer');
+</script>
+<include file='footer' />

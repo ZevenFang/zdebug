@@ -1,0 +1,37 @@
+<include file='header' title='修改任务'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+	<div class="box grid_9" style="margin-left: 13%">
+        <div class="box-head"><h2>修改任务</h2></div>
+     	<div class="box-content">
+	     	<form method="post" action="__CONTROLLER__/editTaskAct/id/{$task.id}">
+	     		<div class="form-row"><p class="form-label">任务标题：</p><div class="form-item"><input name="name" value="{$task.name}" type="text" placeholder="6-30个字符" pattern="^.{6,30}$" required/></div></div>
+	     		<div class="form-row">
+		            <label class="form-label">任务类型：</label>
+		            <div class="form-item">
+		              <select name='type'>
+						<option value="1" <if condition="$task['type'] eq 1">selected</if>>设计</option>
+						<option value="2" <if condition="$task['type'] eq 2">selected</if>>开发</option>
+						<option value="3" <if condition="$task['type'] eq 3">selected</if>>测试</option>
+						<option value="4" <if condition="$task['type'] eq 4">selected</if>>研究</option>
+						<option value="5" <if condition="$task['type'] eq 5">selected</if>>讨论</option>
+						<option value="6" <if condition="$task['type'] eq 6">selected</if>>界面</option>
+						<option value="7" <if condition="$task['type'] eq 7">selected</if>>事务</option>
+						<option value="8" <if condition="$task['type'] eq 8">selected</if>>其他</option>
+		              </select>
+		            </div>
+		        </div>
+	     		<div class="form-row">
+		     		<textarea id="desc" name="desc" style="width:100%;height:300px;"><font color='gray'>{$task.desc}</font></textarea>
+				</div>
+				<div class="form-row"><input type="submit" class="button big blue" value="修改任务"></div>
+	     	</form>
+     	</div>
+	</div>
+</div>
+<script>
+var ue = UE.getEditor('desc',{
+    serverUrl :"{:U('Home/Plugin/ueditor')}"
+});
+</script>
+<include file='footer' />

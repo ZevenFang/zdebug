@@ -1,0 +1,168 @@
+<include file='header' title='团队管理'/>
+<!--- CONTENT AREA -->
+<empty name="project">
+<div class="content container_12">
+     <h1 id="error-heading">Empty</h1>
+     <p id="error-desc">请先创建一个项目，再管理您的团队。</p>
+     <p id="error-back">马上<a href="__CONTROLLER__/projectManagement">创建新项目</a>.
+     </p>
+</div>
+<else/>
+<div class="content container_12">
+	<div class="box grid_9" style="margin-left: 13%">
+        <div class="box-head"><h2>{$project.name}-团队管理</h2></div>
+        <div class="box-content no-pad">
+        <ul class="table-toolbar">
+            <li onclick="newTeam()"><a href="#"><img src="__PUBLIC__/img/icons/basic/plus.png" alt="" />创建团队</a></li>
+        </ul>
+        <table class="display" id="teams">
+        <thead>
+          <tr>
+          	<th>编号</th>
+            <th>团队名称</th>
+            <th>创建时间</th>
+            <th>队长</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+        <foreach name="teams" item="team" >
+          <tr class="odd gradeX">
+          	<td>{$team.code}</td>
+            <td>{$team.name}</td>
+            <td class='center'>{:date('Y-m-d　H:i:s',$team['createtime'])}</td>
+            <td class="center">{$team.leader}</td>
+            <td class="center">
+		      	<img src="__PUBLIC__/icon/pencil.png" alt="管理" onclick="location.href='__CONTROLLER__/editTeam/id/{$team.id}'"/>　
+		      	<img src="__PUBLIC__/icon/shutdown.png" alt="解散" data-id='{$team.id}' onclick="disTeam(this)"/>
+			</td>
+          </tr>
+         </foreach>
+		</tbody>
+		</table>
+		</div>
+	</div>
+	<div id="newTeam" title="新建团队">
+       	<form>
+       		<div class="form-row">
+       		<p class="form-label">接管项目：</p><div class="form-item"><input type="text" value="{$project.name}" disabled/></div>
+       		</div>
+       		<div class="form-row">
+       		<p class="form-label">团队名称：</p><div class="form-item"><input type="text" name='name'/></div>
+       		</div>
+       		<div class="form-row">
+       		<p class="form-label">团队编号：</p><div class="form-item"><input type="text" name='code'/></div>
+       		</div>
+       		<div class="form-row">
+       		<p class="form-label">指定队长：</p>
+       		<div class="form-item">
+       		<select name='leader'>
+       			<option value="0">请选择...</option>
+       			<foreach name="mates" item="mate" >
+       				<option value="{$mate.id}" title="{$mate.account}">{$mate.realname}</option>
+       			</foreach>
+       		</select></div></div>
+       		<p class="form-label">选择队员：<br/>(可不勾选队长)</p><br/><br/>
+       		<empty name="mates">
+       			<font color="gray">没有可选队员</font>
+       		<else />
+       		<table style="width: 455px;">
+   				<thead>
+   					<tr>
+    					<td>姓名</td>
+    					<td>账户名</td>
+    					<td>性别</td>
+    					<td>所在部门</td>
+    				</tr>
+   				</thead>
+   				<tbody>
+	       		<foreach name="mates" item="mate" >
+       				<tr>
+       					<td><input type="checkbox" value="{$mate.id}" name='mates[]'><a title="{$mate.account}">　{$mate.realname}</a></td>
+       					<td>{$mate.account}</td>
+       					<td>
+       						<if condition="$mate['sex'] eq 0">
+				          		男
+				          	<elseif condition="$mate['sex'] eq 1"/>
+				          		女
+				          	<else/>
+				          		未知性别
+				          	</if>
+       					</td>
+       					<td>{$mate.dept}</td>
+       				</tr>
+	       		</foreach>
+       			</tbody>
+       		</table>
+       		</empty> 
+       	</form>
+    </div>
+    <div id="disTeam" title="解散团队">
+    	是否确定<font color="red">解散</font>该团队？
+    </div>
+</div>
+<script>
+    var id = 0;
+    $( "#newTeam" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        buttons: {
+            创建: function() {
+                if($("#newTeam input[name='name']").val().length==0)
+                    $.sticky("<font color='orange'>请填写团队名称！</font>");
+                else if($("#newTeam input[name='code']").val().length==0)
+                    $.sticky("<font color='orange'>请填写团队编号！</font>");
+                else if($("#newTeam option:selected").val()==0)
+                    $.sticky("<font color='orange'>请选择团队的队长！</font>");
+                else{
+                    $.post("__MODULE__/Back/newTeam", $("#newTeam form").serialize(),function(data){
+                        if(data==1){
+                             location.reload();
+                         }else if(data==2)
+                             $.sticky("<font color='red'>已存在团队名字或编号！</font>");
+                         else if(data==0){
+                             $.sticky("<font color='orange'>抱歉，团队创建失败！</font>");
+                             $( '#newTeam' ).dialog( "close" );
+                         }
+                    });
+                }
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#disTeam" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确定: function() {
+                $.get("__MODULE__/Back/disTeam/id/"+id, function(data){
+                    $( this ).dialog( "close" );
+                    if(data==1)
+                        location.reload();
+                    else if(data==0)
+                        $.sticky("<font color='orange'>抱歉，解散团队失败！</font>");
+                });
+            },
+            取消: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    function newTeam(){
+        $( "#newTeam" ).dialog('open');
+    }
+    function disTeam(team){
+        id = team.dataset.id;
+        $( "#disTeam" ).dialog('open');
+    }
+    $('#teams').dataTable( {
+        "bJQueryUI": true
+    }); /* For the data tables */
+    $("#teams img").tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+    $("#teams img").attr('style','width: 20px;cursor: pointer');
+</script>
+</empty>
+<include file='footer' />

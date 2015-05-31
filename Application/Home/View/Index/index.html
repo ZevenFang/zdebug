@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Zdebug-登陆</title>
+  <{$link} rel="shortcut icon" href="__PUBLIC__/img/favicon.gif"/>
+  <!---CSS Files-->
+  <css rel="stylesheet" href="__PUBLIC__/css/master.css"/>
+  <css rel="stylesheet" href="__PUBLIC__/css/login.css"/>
+  <!---jQuery Files-->
+  <js href="__PUBLIC__/js/jquery-1.7.1.min.js"/>
+  <js href="__PUBLIC__/js/jquery.spinner.js"/>
+  <js type="text/javajs" href="__PUBLIC__/js/forms/jquery.validate.min.js"/>
+  <js href="__PUBLIC__/js/sticky.full.js"/>
+  <!---Fonts-->
+  <css href='__PUBLIC__/css/css.css' rel='stylesheet' type='text/css'/>
+  <script>
+    $(document).ready(function () {
+        $('div.wrapper').hide();
+        $('div.wrapper').fadeIn(1200);
+        $('#lg-form').validate();
+        $('.submit').click(function() {
+        var $this = $(this);
+        $this.spinner();
+        setTimeout(function() {
+                $this.spinner('remove');
+        }, 1000);
+       });
+        $('#lg-form').submit(function() {
+   			$.ajax({
+   			   type: "POST",
+   			   url: "__MODULE__/Back/login",
+   			   data: $(this).serialize(),
+   			   success: function(data){
+   				   if(data==0)
+   					    $.sticky("<font color='red'>输入账号或密码错误！</font>");
+   				   else if(data==1)
+   						location.href='__CONTROLLER__/dashboard';
+   				   else if(data==2)
+   						$.sticky("<font color='orange'>未通过验证用户，请耐心等待管理员验证！</font>");
+   				   else if(data==3)
+						$.sticky("<font color='red'>该用户不存在或已被删除！</font>");
+   			   }
+   			});
+   			return false;
+   		});
+    });
+  </script>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="logo">
+	 	<h1>登陆页面</h1>
+	 </div>
+   <div class="lg-body">
+     <div class="inner">
+       <div id="lg-head">
+         <p><span class="font-bold">提示: </span>{$prompt|default='请登录您的账号密码进入系统。'}</p>
+         <div class="separator"></div>
+       </div>
+       <div class="login">
+         <form id="lg-form" method="post">
+           <fieldset>
+              <ul>
+                 <li id="usr-field">
+                  <input class="input required" name="account" type="text" size="26" minlength ="1" placeholder="用户名..." value="{$account}"/>
+                 </li>
+                 <li id="psw-field">
+                  <input class="input required" name="password" type="password" size="26" minlength="1" placeholder="密码..." value="{$password}"/>
+                 </li>
+                 <li class="checkbox">
+                  <input class="checkbox" type="checkbox" name="remember" checked/> 
+                  <label for="remember-me" class="checkbox-text">记住我</label>
+                 </li>
+                 <li>
+                  <input class="submit" type="submit" value=""/>
+                 </li>
+              </ul>
+           </fieldset>
+          </form>
+          <span id="lost-psw">
+           <a href="__CONTROLLER__/register">注册账户</a>
+          </span>
+        </div>
+     </div>
+    </div>
+	</div>
+<div style="display:none"><js href='__PUBLIC__/js/stat.js' language='Javajs' charset='gb2312'/></div>
+</body>
+</html>

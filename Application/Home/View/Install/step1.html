@@ -1,0 +1,41 @@
+<include file='header'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+	<div class="box grid_7" style="margin-left: 23%">
+		<div class="box-head"><h2>安装向导</h2></div>
+	  	<div class="box-content">
+            <form method="post" action="__CONTROLLER__/step2">
+                <br/>
+                <h5>配置数据库</h5><hr>
+                <div class="form-row"><p class="form-label">数据库地址：</p><div class="form-item"><input name="host" type="text" value="localhost" required/></div></div>
+                <div class="form-row"><p class="form-label">数据库用户名：</p><div class="form-item"><input name="u" type="text" required/></div></div>
+                <div class="form-row"><p class="form-label">数据库密码：</p><div class="form-item"><input name="p" type="password"/></div></div>
+                <div class="form-row"><p class="form-label">数据库名：</p><div class="form-item"><input name="dbname" value="zdebug" type="text" required/></div></div>
+                <div class="form-row"><p class="form-label">数据库端口号：</p><div class="form-item"><input name="port" type="text" required/></div></div>
+                <br/><h5>超级管理员信息</h5><hr>
+                <div class="form-row"><p class="form-label">真实姓名：</p><div class="form-item"><input name="realname" type="text" required/></div></div>
+                <div class="form-row"><p class="form-label">管理员用户名：</p><div class="form-item"><input name="admin" type="text" required/></div></div>
+                <div class="form-row"><p class="form-label">管理员密码：</p><div class="form-item"><input id="pwd" name="pwd" type="password" required/></div></div>
+                <div class="form-row"><p class="form-label">确认密码：</p><div class="form-item"><input id="rePwd" type="password" required/></div></div>
+                <div class="form-row"><p class="form-label">选择性别：</p><input name="sex" type="radio" checked value="0"/>男<input name="sex" type="radio" value="1"/>女</div><br/>
+                <input type="button" class="button orange" value="上一步" onclick="history.go(-1)">
+                <input type="submit" class="button green" value="下一步" onclick="checkPwd()">
+            </form>
+	  	</div>
+	</div>
+</div>
+<script>
+    var pass1 = document.getElementById("pwd");
+    var pass2 = document.getElementById("rePwd");
+    $("form").submit(function(){
+        if (pass1.value != pass2.value) {
+            pass1.setCustomValidity("两次输入的密码不匹配");
+            return false;
+        }
+    });
+    function checkPwd(){
+        if (pass1.value == pass2.value)
+            pass1.setCustomValidity("");
+    }
+</script>
+<include file='footer' />

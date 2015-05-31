@@ -1,0 +1,34 @@
+<include file='header' title='任务详情'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="box grid_12">
+        <div class="box-head"><h2>{$task.name}-任务要求</h2></div>
+        <div class="box-content">
+            {$task.desc}<br/><br/>
+            <if condition="$remark eq 1">
+                <input type="button" value="查看备注" class="button big green" onclick="remark()"/>
+            </if>
+        </div>
+    </div>
+    <if condition="$remark eq 1">
+        <div id="remark" title="{$task.name}-备注">
+            {$task.remark}
+        </div>
+        <script>
+            $( "#remark" ).dialog({
+                autoOpen: false,
+                resizable: false,
+                modal:true,
+                buttons: {
+                    关闭: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+            function remark(){
+                $( "#remark" ).dialog('open');
+            }
+        </script>
+    </if>
+</div>
+<include file='footer' />

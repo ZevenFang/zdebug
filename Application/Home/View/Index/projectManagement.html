@@ -1,0 +1,192 @@
+<include file='header' title='项目管理'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+     <div class="box grid_6">
+        <div class="box-head"><h2>创建任务</h2></div>
+     	<div class="box-content">
+	     	<form method="post" id='newTask'>
+	     		<div class="form-row"><p class="form-label">任务标题：</p><div class="form-item"><input name="name" type="text" placeholder="6-30个字符" pattern="^.{6,30}$" required/></div></div>
+	     		<div class="form-row">
+		            <label class="form-label">任务类型：</label>
+		            <div class="form-item">
+		              <select name='type'>
+						<option value="1">设计</option>
+						<option value="2">开发</option>
+						<option value="3">测试</option>
+						<option value="4">研究</option>
+						<option value="5">讨论</option>
+						<option value="6">界面</option>
+						<option value="7">事务</option>
+						<option value="8">其他</option>
+		              </select>
+		            </div>
+		        </div>
+	     		<div class="form-row">
+		     		<textarea id="desc" name="desc" style="width:100%;height:300px;"><font color='gray'>任务要求期望，可上传附件...</font></textarea>
+				</div>
+				<div class="form-row"><input type="submit" class="button big blue" value="创建任务"></div>
+	     	</form>
+     	</div>
+	</div>
+     <div class="box grid_6">
+        <div class="box-head"><h2>新建项目</h2></div>
+     	<div class="box-content">
+	     	<form method="post" id='newProject'>
+		     	<div class="form-row"><p class="form-label">项目名称：</p><div class="form-item"><input name="name" type="text" placeholder="6-30个字符" pattern="^.{6,30}$" required/></div></div>
+		     	<div class="form-row"><p class="form-label">项目代号：</p><div class="form-item"><input name="code" type="text" placeholder="团队内部的简称" required/></div></div>
+		     	<div class="form-row">
+		            <p class="form-label">可用工作日：</p>
+		            <input name='avail' type='radio' value='7' checked/>一星期　
+            		<input name='avail' type='radio' value='14'/>两星期　
+            		<input name='avail' type='radio' value='30'/>一个月　
+            		<input name='avail' type='radio' value='60'/>两个月　
+            		<input name='avail' type='radio' value='90'/>三个月　
+            		<input name='avail' type='radio' value='183'/>半年　
+            		<input name='avail' type='radio' value='365'/>一年　
+		            <input id='custom' name='avail' type='radio' value='0'/>自定义
+		            <input style="width: 75px" type="number" disabled required/></div>
+		        <div class="form-row">
+		        <p class="form-label">项目基本描述：</p><br><br>
+		        	<textarea name="desc" style="width:100%;height:150px;" placeholder="请控制在255个字符以内..." maxlength="255"></textarea>
+		     	</div>
+		     	<div class="form-row">
+		     		<textarea id="demand" name="demand" style="width:100%;height:300px;"><font color='gray'>项目需求分析，可上传附件...</font></textarea>
+				</div>
+				<div class="form-row"><input type="submit" class="button big blue" value="新建项目"></div>
+	     	</form>
+     	</div>
+	</div>
+	<div id="projectDialog" title="创建项目">
+       		项目创建成功！<br><br>
+     </div>
+     <div id="taskDialog" title="分配任务">
+       		<h3><font color="green">任务创建成功，是否分配该任务：</font></h3>
+       		<br>
+       		<form action="post">
+       			<div class="form-row">指派给：
+       			<div class="form-item">
+       			<select name='assignedTo'>
+       				<option value='0' selected>请选择团队</option>
+       			</select>
+       			</div></div>
+       			<div class="form-row">
+		     		<textarea id="remark" name="remark" style="width:100%;height:300px;"><font color='gray'>任务备注，可上传附件...</font></textarea>
+				</div>
+       			<input type="submit" value="分配" class="button big green"/>
+       			<input type="button" value="取消" class="button big orange"/>
+       		</form>
+     </div>
+	<script>
+        var hasTeam = false;
+		$("#taskDialog form").submit(function(){
+			if($("#taskDialog option:selected").val()==0){
+				$.sticky("<font color='red'>请选择一个团队！</font>");
+				return false;
+			}
+			$.ajax({
+   			   type: "POST",
+   			   url: "__MODULE__/Back/assignTask",
+   			   data: $(this).serialize(),
+   			   success: function(data){
+		   		   if(data==0)
+		   				$.sticky("<font color='orange'>抱歉，任务分配失败！</font>");
+		   		   else if(data==1){
+		   				$( "#taskDialog" ).dialog( "close" );
+		   				location.reload();
+		   		   }
+   			   }
+   			});
+   			return false;
+		});
+		function addTeams(){
+			$.ajax({
+	   			   type: "POST",
+	   			   url: "__MODULE__/Back/getTeams",
+	   			   success: function(data){
+	   					var teams = JSON.parse(data);
+	   					for (i=0;i<teams.length;i++)
+	   						$("#taskDialog select").append("<option value='"+teams[i].id+"'>"+teams[i].name+"</option>");
+	   			   }
+			});
+		}
+		$("#taskDialog input[type='button']").click(function(){
+			$( "#taskDialog" ).dialog( "close" );
+		});
+		$("#newProject").submit(function() {
+   			$.ajax({
+   			   type: "POST",
+   			   url: "__MODULE__/Back/newProject",
+   			   data: $(this).serialize(),
+   			   success: function(data){
+		   		   if(data==1)
+		   				$( "#projectDialog" ).dialog( "open" );
+   				   else if(data==0)
+  						$.sticky("<font color='orange'>您创建的项目未完成，无法创建新项目</font>");
+   				   else if(data==2)
+   						$.sticky("<font color='orange'>抱歉，项目创建失败</font>");
+   			   }
+   			});
+   			return false;
+    	});
+		$( "#projectDialog" ).dialog({
+		      autoOpen: false,
+		      resizable: false,
+		      modal: true,
+		      buttons: {
+		                       关闭: function() {
+			          $( this ).dialog( "close" );
+			          location.reload();
+			        }
+		      }
+		});
+		$("#newTask").submit(function() {
+   			$.ajax({
+   			   type: "POST",
+   			   url: "__MODULE__/Back/newTask",
+   			   data: $(this).serialize(),
+   			   success: function(data){
+				   if(data==0)
+						$.sticky("<font color='orange'>您不是这个项目的创建人，无权创建新任务</font>");
+				   else{
+					   $("#taskDialog form").append("<input type='hidden' name='id' value='"+data+"'/>");
+					   if(!hasTeam){
+					   		addTeams();
+					   		hasTeam = true;
+					   }
+					   $( "#taskDialog" ).dialog( "open" );
+				   }
+   			   }
+   			});
+   			return false;
+    	});
+		$( "#taskDialog" ).dialog({
+		      autoOpen: false,
+		      resizable: false,
+		      modal: true
+		});
+		var ue = UE.getEditor('demand',{
+		    serverUrl :"{:U('Home/Plugin/ueditor')}"
+		});
+		var ue = UE.getEditor('desc',{
+		    serverUrl :"{:U('Home/Plugin/ueditor')}"
+		});
+		var ue = UE.getEditor('remark',{
+		    serverUrl :"{:U('Home/Plugin/ueditor')}",
+		    toolbars: [
+		               ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+		               ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+		              ]
+		});
+		$("#newProject [name='avail']").click(function() {
+			if($("#custom").attr('checked'))
+				$("#newProject [type='number']").removeAttr('disabled');
+			else
+				$("#newProject [type='number']").attr('disabled','disabled');
+		});
+		$("#newProject [type='number']").blur(function(){
+			var avail = $("#newProject [type='number']").val();
+			$("#custom").val(avail);
+		});
+	</script>
+</div>
+<include file='footer' />

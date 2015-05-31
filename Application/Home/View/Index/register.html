@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh">
+<!--- HEADER -->
+<head>
+    <meta charset="utf-8">
+    <title>Zdebug-注册用户</title>
+    <link rel="shortcut icon" href="__PUBLIC__/img/favicon.gif"/>
+    <!---CSS Files-->
+    <css rel="stylesheet" href="__PUBLIC__/css/master.css"/>
+    <css rel="stylesheet" href="__PUBLIC__/css/tables.css"/>
+    <!---jQuery Files-->
+    <js href="__PUBLIC__/js/jquery-1.7.1.min.js"/>
+    <js href="__PUBLIC__/js/jquery-ui-1.8.17.min.js"/>
+    <js href="__PUBLIC__/js/styler.js"/>
+    <js href="__PUBLIC__/js/jquery.tipTip.js"/>
+    <js href="__PUBLIC__/js/colorpicker.js"/>
+    <js href="__PUBLIC__/js/sticky.full.js"/>
+    <js href="__PUBLIC__/js/global.js"></js>
+    <js href="__PUBLIC__/js/flot/jquery.flot.min.js"/>
+    <js href="__PUBLIC__/js/flot/jquery.flot.resize.min.js"/>
+    <js href="__PUBLIC__/js/jquery.dataTables.min.js"/>
+    <!---Fonts-->
+    <css href='__PUBLIC__/css/css.css' rel='stylesheet' type='text/css'/>
+    <css href='__PUBLIC__/css/css2.css' rel='stylesheet' type='text/css'/>
+</head>
+<body>
+<div class="header">
+    <a href="#"><img src="__PUBLIC__/img/logo.png" alt="Logo" /></a>
+    <div class="styler">
+        <ul class="styler-show">
+            <li><div id="colorSelector-top-bar"></div></li>
+            <li><div id="colorSelector-box-head"></div></li>
+        </ul>
+    </div>
+</div>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+	<div class="box grid_7" style="margin-left: 22%">
+		<div class="box-head"><h2>注册</h2></div>
+	  	<div class="box-content">
+            <form method="post" id="register">
+                <div class="form-row">
+                    <p class="form-label">真实姓名：</p><div class="form-item"><input type="text" name="realname"/></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">联系邮箱：</p><div class="form-item"><input type="email" name='email'/></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">联系电话：</p><div class="form-item"><input type="text" name='phone'/></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">性别：</p>
+                    <input type="radio" name='sex' value="0" checked/>男<input type="radio" name='sex' value="1"/>女
+                </div>
+                <div class="form-row">
+                    <p class="form-label">账户名：</p><div class="form-item"><input type="text" name='account'/></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">密码：</p><div class="form-item"><input type="password" name='password' placeholder="六位以上(由数字字母下划线组成)"/></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">重复密码：</p><div class="form-item"><input type="password" name='repwd'/></div>
+                </div>
+                <div class="form-row">
+                    <p class="form-label">输入验证码：</p>
+                    <div class="form-item">
+                        <input type="text" name='verify' style="width: 30%"/><br>
+                        <img alt='点击刷新验证码' src="__MODULE__/Plugin/verify/" onclick="this.src+=1"/>
+                    </div>
+                </div><br/><br/>
+                <input type="submit" class="button green" value="提交注册"/>
+                <input type="button" class="button green" value="返回登录页" onclick="location.href='__CONTROLLER__/index'"/>
+            </form>
+	  	</div>
+	</div>
+</div>
+<div id="success" title="提交成功">
+    提交注册信息成功，请耐心等待管理员的邮件通知。
+</div>
+<script>
+    $( "#success" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确定: function() {
+                $( this ).dialog( "close" );
+            },
+            返回登录页: function() {
+                location.href='__CONTROLLER__/index';
+            }
+        }
+    });
+    $("#register").submit(function(){
+        var pwd = $("input[name='password']").val();
+        if($("input[name='realname']").val().length==0)
+            $.sticky("<font color='orange'>请填写用户真实名称！</font>");
+        else if($("input[name='email']").val().length==0)
+            $.sticky("<font color='orange'>请填写邮箱！</font>");
+        else if(!/^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/.test($("input[name='email']").val()))
+            $.sticky("<font color='orange'>请填写正确的邮箱地址！</font>");
+        else if(!/\d+/.test($("input[name='phone']").val()))
+            $.sticky("<font color='orange'>请填写正确的联系电话！</font>");
+        else if(!/^\w{3,15}$/.test($("input[name='account']").val()))
+            $.sticky("<font color='orange'>账户名在3～15位之间！</font>");
+        else if(!/^\w{6,32}$/.test(pwd))
+            $.sticky("<font color='orange'>密码在6～32位之间！</font>");
+        else if($("input[name='repwd']").val()!=pwd)
+            $.sticky("<font color='red'>两次输入的密码不一致！</font>");
+        else{
+            $.post("__MODULE__/Back/register", $("#register").serialize(),function(data){
+                if(data==1){
+                    var btn = $("input[type='submit']");
+                    btn.addClass('disabled');
+                    btn.attr('disabled','disabled');
+                    $( "#success" ).dialog('open');
+                }else if(data==2)
+                    $.sticky("<font color='orange'>已存在该账户名！</font>");
+                else if(data==3) {
+                    $.sticky("<font color='orange'>验证码输入错误！</font>");
+                    var src = $('#register img').attr('src');
+                    $('#register img').attr('src',src+1);
+                }
+                else if(data==0)
+                    $.sticky("<font color='orange'>抱歉，添加用户失败！</font>");
+            });
+        }
+        return false;
+    });
+    $('#register img').tipTip({attribute: "alt", delay: "100", defaultPosition: "bottom"});
+    $('#register img').attr('style','width: 31%;cursor: pointer');
+</script>
+<include file='footer' />

@@ -1,0 +1,445 @@
+<include file='header' title='项目分析'/>
+<!--- CONTENT AREA -->
+<empty name="project">
+    <div class="content container_12">
+        <h1 id="error-heading">Denied</h1>
+        <p id="error-desc">无权访问项目分析<br><br>
+            您暂时没有加入任何团队，或者您所在团队暂时没有接管的项目。</p>
+        <p id="error-back">返回<a href="__CONTROLLER__/dashboard">个人中心</a>.
+        </p>
+    </div>
+    <else/>
+    <div class="content container_12">
+        <div class="sm-box grid_12">
+	      <span><h2>项目进度<br>{$project.progress|default=0}%</h2>
+	       <div id="progressbar"></div>
+	      </span>
+        </div>
+        <div class="box grid_3">
+            <div class="box-head"><h2>项目基本信息</h2></div>
+            <div class="box-content">
+                项目名称：{$project.name}<br><br><br>
+                项目代号：{$project.code}<br><br><br>
+                项目开始时间：{:date('Y-m-d  H:i:s',$project['begin'])}<br><br><br>
+                预期结束时间：{:date('Y-m-d  H:i:s',$project['end'])}<br><br><br>
+                项目概况：<br><br>
+                　　{$project.desc}<br><br><br>
+                <input type="button" onclick="location.href='__CONTROLLER__/projectInfo'" class="button green" value="查看需求" />
+                <if condition="$user['id'] eq $project['creator']">
+                    <input type="button" id='modDemand' class="button orange" value="修改信息" />
+                    <input type="button" onclick='finishProject()' class="button orange" value="完结项目" />
+                </if>
+            </div>
+        </div>
+        <if condition="$user['id'] eq $project['creator']">
+            <!-- 修改需求 -->
+            <div id="modDemandDialog" title="修改需求">
+                <form method="post">
+                    <div class="form-row"><p class="form-label">项目代号：</p><div class="form-item"><input name="code" type="text" placeholder="团队内部的简称" required value='{$project.code}'/></div></div>
+                    <div class="form-row">
+                        <p class="form-label" style="height: 75px">可用工作日：</p>
+                        <input name='avail' type='radio' value='7' checked/>一星期　
+                        <input name='avail' type='radio' value='14'/>两星期　
+                        <input name='avail' type='radio' value='30'/>一个月<br><br>
+                        <input name='avail' type='radio' value='60'/>两个月　
+                        <input name='avail' type='radio' value='90'/>三个月　
+                        <input name='avail' type='radio' value='183'/>半年<br>
+                        <input name='avail' type='radio' value='365'/>一年　
+                        <input id='custom' name='avail' type='radio' value='0'/>自定义
+                        <input style="width: 75px" type="number" disabled required/></div>
+                    <div class="form-row">
+                        <p class="form-label">修改项目进度：</p><br><br>
+                        <div id="slider"></div>
+                    </div>
+                    <div class="form-row">
+                        <p class="form-label">项目基本描述：</p><br><br>
+                        <textarea name="desc" style="width:100%;height:100px;" placeholder="请控制在255个字符以内..." maxlength="255">{$project.desc}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="demandEditor" name="demand" style="width:100%;">{$project.demand}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <input type="submit" class="button big blue" value="更新信息">
+                        <input type="button" class="button big orange" value="取消">
+                    </div>
+                </form>
+            </div>
+            <!-- 完结项目 -->
+            <div id="finishDialog" title="完结项目">
+                是否确定结束这个项目？
+            </div>
+            <script>
+                $('#slider').slider({
+                    range: "min",
+                    value: {$project.progress}
+                });
+                $("#modDemandDialog [name='avail']").click(function() {
+                    if($("#custom").attr('checked'))
+                        $("#modDemandDialog [type='number']").removeAttr('disabled');
+                    else
+                        $("#modDemandDialog [type='number']").attr('disabled','disabled');
+                });
+                $("#modDemandDialog [type='number']").blur(function(){
+                    var avail = $("#modDemandDialog [type='number']").val();
+                    $("#custom").val(avail);
+                });
+                $("#modDemandDialog form").submit(function() {
+                    var progress = $('#slider a').css('left');
+                    progress = progress.replace(/[^0-9\.]+/,'');
+                    $.ajax({
+                        type: "POST",
+                        url: "__MODULE__/Back/modProject",
+                        data: $(this).serialize()+"&progress="+progress/4.5,
+                        success: function(data){
+                            if(data==1){
+                                $( "#modDemandDialog" ).dialog('close');
+                                location.reload();
+                            }else
+                                $.sticky("<font color='orange'>抱歉，项目信息修改失败！</font>");
+                        }
+                    });
+                    return false;
+                });
+                $("#modDemand").click(function(){
+                    $( "#modDemandDialog" ).dialog('open');
+                });
+                $("#modDemandDialog input[type='button']").click(function(){
+                    $( "#modDemandDialog" ).dialog('close');
+                });
+                $( "#modDemandDialog" ).dialog({
+                    autoOpen: false,
+                    modal:true
+                });
+                var ue = UE.getEditor('demandEditor',{
+                    serverUrl :"{:U('Home/Plugin/ueditor')}"
+                });
+                $( "#finishDialog" ).dialog({
+                    autoOpen: false,
+                    resizable: false,
+                    modal: true,
+                    buttons: {
+                        确定: function() {
+                            location.href = '__CONTROLLER__/finishProjectAct/id/{$project.id}'
+                        },
+                        取消: function() {
+                            $( this ).dialog( "close" );
+                        }
+                    }
+                });
+                function finishProject(){
+                    $( "#finishDialog" ).dialog('open');
+                }
+            </script>
+        </if>
+        <if condition="$user['permission'] gt 1">
+            <!-- 分配bug -->
+            <div id="bugDialog" title="分配bug">
+                <form method="post">
+                    <div class="form-row">指派给：
+                        <div class="form-item">
+                            <select name='assignedTo'>
+                                <option value='0' selected>请选择分配人</option>
+                            </select>
+                        </div></div>
+                    <div class="form-row">
+                        <textarea id="bugRemark" name="remark" style="width:100%;height:300px;"><font color='gray'>添加备注，可上传附件...</font></textarea>
+                    </div>
+                    <input type="submit" value="分配" class="button big green"/>
+                    <input type="button" value="取消" class="button big orange"/>
+                </form>
+            </div>
+            <!-- 驳回bug -->
+            <div id="rejectBug" title="驳回bug">
+                <form action="__CONTROLLER__/rejectBug" method="post">
+                    <div class="form-row">
+                        <textarea id="rejectRemark" name="remark" style="width:100%;height:300px;"><font color='gray'>驳回理由，可上传附件...</font></textarea>
+                    </div>
+                    <input type="submit" value="驳回" class="button big green"/>
+                    <input type="button" value="取消" class="button big orange"/>
+                </form>
+            </div>
+            <script>
+                var hasAssign = false;
+                var id = 0;
+                function assignBtn(hand){
+                    $( "#bugDialog" ).dialog( "open" );
+                    if(!hasAssign){
+                        addAssigner();
+                        hasAssign = true;
+                    }
+                    id = hand.name;
+                }
+                function rejectBug(reject){
+                    $( "#rejectBug" ).dialog( "open" );
+                    id = reject.name;
+                    $( "#rejectBug form" ).append("<input type='hidden' name='id' value='"+id+"'/>");
+                }
+                $("#bugDialog form").submit(function(){
+                    if($("#bugDialog option:selected").val()==0){
+                        $.sticky("<font color='red'>请选择一个分配人！</font>");
+                        return false;
+                    }
+                    $.ajax({
+                        type: "POST",
+                        url: "__MODULE__/Back/assignBug/id/"+id,
+                        data: $(this).serialize(),
+                        success: function(data){
+                            if(data==0)
+                                $.sticky("<font color='orange'>抱歉，bug分配失败！</font>");
+                            else if(data==1){
+                                $( "#bugDialog" ).dialog( "close" );
+                                location.reload();
+                            }
+                        }
+                    });
+                    return false;
+                });
+                function addAssigner(){
+                    $.ajax({
+                        type: "POST",
+                        url: "__MODULE__/Back/getAssigner",
+                        success: function(data){
+                            var assigner = JSON.parse(data);
+                            for (i=0;i<assigner.length;i++)
+                                $("#bugDialog select").append("<option value='"+assigner[i].id+"'>"+assigner[i].realname+"</option>");
+                        }
+                    });
+                }
+                $("#bugDialog input[type='button']").click(function(){
+                    $( "#bugDialog" ).dialog( "close" );
+                });
+                $("#rejectBug input[type='button']").click(function(){
+                    $( "#rejectBug" ).dialog( "close" );
+                });
+                $( "#bugDialog" ).dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                $( "#rejectBug" ).dialog({
+                    autoOpen: false,
+                    modal: true
+                });
+                var ue = UE.getEditor('bugRemark',{
+                    serverUrl :"{:U('Home/Plugin/ueditor')}",
+                    toolbars: [
+                        ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                        ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+                    ]
+                });
+                var ue = UE.getEditor('rejectRemark',{
+                    serverUrl :"{:U('Home/Plugin/ueditor')}",
+                    toolbars: [
+                        ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                        ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+                    ]
+                });
+            </script>
+        </if>
+        <!-- 提交bug -->
+        <div class="box grid_9">
+            <div class="box-head"><h2>提交一个bug</h2></div>
+            <div class="box-content">
+                <form method="post" id='commitBug'>
+                    <div class="form-row"><p class="form-label">Bug标题：</p><div class="form-item"><input name="name" type="text" placeholder="6-30个字符" pattern="^.{6,30}$" required/></div></div>
+                    <div class="form-row"><p class="form-label">关键词：</p><div class="form-item"><input name="keywords" type="text"/></div></div>
+                    <div class="form-row">
+                        <label class="form-label">Bug类型：</label>
+                        <div class="form-item">
+                            <select name='type'>
+                                <option value="1" selected>代码错误</option>
+                                <option value="2">界面优化</option>
+                                <option value="3">设计缺陷</option>
+                                <option value="4">安全相关</option>
+                                <option value="5">性能问题</option>
+                                <option value="6">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="step" name="step" style="width:100%;height:70px;"><p>[实现步骤]</p><br><p>[出现结果]</p><br></textarea>
+                    </div>
+                    <div class="form-row">
+                        <textarea id="expect" name="expect" style="width:100%;height:70px;"><font color='gray'>期望结果，可上传附件...</font></textarea>
+                    </div>
+                    <div class="form-row"><input type="submit" class="button big blue" value="提交bug"></div>
+                </form>
+            </div>
+        </div>
+        <div id="bugPrompt" title="提示">
+            Bug已提交，辛苦啦~~~
+            <br><br>
+        </div>
+        <div id="fireBugPrompt" title="提示">
+            是否确定已经解决这个bug？
+            <br><br>
+        </div>
+        <div class="box grid_12">
+            <div class="box-head"><h2>未解决的bugs</h2></div>
+            <div class="box-content no-pad">
+                <table class="display" id="bugs">
+                    <thead>
+                    <tr>
+                        <th>Bug标题</th>
+                        <th>关键词</th>
+                        <th>类型</th>
+                        <th>提交人</th>
+                        <th>创建时间</th>
+                        <th>指派给</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="bugs" item="bug" >
+                        <tr class="odd gradeX">
+                            <td>{$bug.name}</td>
+                            <td>{$bug.keywords}</td>
+                            <td class="center">
+                                <font color="orange">
+                                    <if condition="$bug['type'] eq 1">代码错误
+                                        <elseif condition="$bug['type'] eq 2"/>界面优化
+                                        <elseif condition="$bug['type'] eq 3"/>设计缺陷
+                                        <elseif condition="$bug['type'] eq 4"/>安全相关
+                                        <elseif condition="$bug['type'] eq 5"/>性能问题
+                                        <else />其他
+                                    </if>
+                                </font>
+                            </td>
+                            <td class="center">{$bug.creator.realname}</td>
+                            <td class='center'>{:date("Y-m-d　H:i:s",$bug['createtime'])}</td>
+                            <td class="center">{$bug.assignedTo.realname}</td>
+                            <td>
+                                <if condition="$user['permission'] gt 1">
+                                    <img src="__PUBLIC__/icon/hand.png" alt="指派给" name="{$bug.id}" onclick='assignBtn(this)'/>　
+                                </if>
+                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/bugInfo/id/{$bug.id}'"/>　
+                                <img src="__PUBLIC__/icon/check.png" alt="解决" name="{$bug.id}" onclick='fireBug(this)'/>　
+                                <if condition="$user['id'] eq $bug['creator']['id']">
+                                    <img src="__PUBLIC__/icon/pencil.png" alt="编辑" onclick="location.href='__CONTROLLER__/editBug/id/{$bug.id}'"/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="box grid_12">
+            <div class="box-head"><h2>已解决的bugs</h2></div>
+            <div class="box-content no-pad">
+                <table class="display" id="debugs">
+                    <thead>
+                    <tr>
+                        <th>Bug标题</th>
+                        <th>关键词</th>
+                        <th>类型</th>
+                        <th>提交人</th>
+                        <th>解决时间</th>
+                        <th>解决人</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="debugs" item="bug" >
+                        <tr class="odd gradeX">
+                            <td>{$bug.name}</td>
+                            <td>{$bug.keywords}</td>
+                            <td class="center">
+                                <font color="orange">
+                                    <if condition="$bug['type'] eq 1">代码错误
+                                        <elseif condition="$bug['type'] eq 2"/>界面优化
+                                        <elseif condition="$bug['type'] eq 3"/>设计缺陷
+                                        <elseif condition="$bug['type'] eq 4"/>安全相关
+                                        <elseif condition="$bug['type'] eq 5"/>性能问题
+                                        <else />其他
+                                    </if>
+                                </font>
+                            </td>
+                            <td class="center">{$bug.creator.realname}</td>
+                            <td class='center'>{:date("Y-m-d　H:i:s",$bug['finishtime'])}</td>
+                            <td class="center">{$bug.solver.realname}</td>
+                            <td>
+                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/bugInfo/id/{$bug.id}'"/>　
+                                <if condition="$user['permission'] gt 1">
+                                    <img src="__PUBLIC__/icon/begin.png" alt="驳回" name='{$bug.id}' onclick="rejectBug(this)"/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        var ue = UE.getEditor('step',{
+            serverUrl :"{:U('Home/Plugin/ueditor')}",
+            toolbars: [
+                ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+            ]
+        });
+        var ue = UE.getEditor('expect',{
+            serverUrl :"{:U('Home/Plugin/ueditor')}",
+            toolbars: [
+                ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+            ]
+        });
+        $('#commitBug').submit(function(){
+            $.ajax({
+                type: "POST",
+                url: "__MODULE__/Back/commitBug",
+                data: $(this).serialize(),
+                success: function(data){
+                    if(data==1)
+                        $( "#bugPrompt" ).dialog('open');
+                    else
+                        $.sticky("<font color='orange'>抱歉，提交bug失败</font>");
+                }
+            });
+            return false;
+        });
+        $( "#bugPrompt" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            modal:true,
+            buttons: {
+                确定: function() {
+                    $( this ).dialog( "close" );
+                    location.reload();
+                }
+            }
+        });
+        $( "#fireBugPrompt" ).dialog({
+            autoOpen: false,
+            resizable: false,
+            modal:true,
+            buttons: {
+                确定: function() {
+                    $( this ).dialog( "close" );
+                    location.href='__CONTROLLER__/fireBug/id/'+id;
+                },
+                取消: function() {
+                    $( this ).dialog( "close" );
+                }
+            }
+        });
+        $("#bugs img,#debugs img").tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+        $("#bugs img,#debugs img").attr('style','width: 20px;cursor: pointer');
+        $("#progressbar").progressbar({
+            value: 1
+        });
+        $("#progressbar .ui-progressbar-value").addClass("ui-corner-right");
+        new_width = "{$project.progress}%";
+        loop_width = "0%";
+        $("#progressbar .ui-progressbar-value").animate({width: new_width}, 3000);
+        $('#bugs,#debugs').dataTable( {
+            "bJQueryUI": true
+        }); /* For the data tables */
+        function fireBug(check){
+            $( "#fireBugPrompt" ).dialog('open');
+            id = check.name;
+        }
+    </script>
+</empty>
+<include file='footer' />

@@ -1,0 +1,38 @@
+<include file='header' title='文档修订'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="box grid_9" style="margin-left: 13%">
+        <div class="box-head"><h2>{$project.name}-{$doc.name}</h2></div>
+        <div class="box-content">
+            <form method="post">
+                <div class="form-row"><p class="form-label">文档标题：</p><div class="form-item"><input name="name" value="{$doc.name}" type="text"/></div></div>
+                <div class="form-row"><p class="form-label">关键词：</p><div class="form-item"><input name="keywords" type="text" value='{$doc.keywords}'/></div></div>
+                <div class="form-row">
+                    <textarea id="content" name="content" style="width:100%;">{$doc.content}</textarea>
+                </div>
+                <div class="form-row"><input type="submit" class="button big blue" value="修改文档"></div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $("form").submit(function(){
+        if($("form input[name='name']").val().length==0)
+            $.sticky("<font color='orange'>请填写文档标题！</font>");
+        else {
+            $.post("__MODULE__/Back/editDoc/id/{$doc.id}", $(this).serialize(), function (data) {
+                if (data == 1) {
+                    location.href="__CONTROLLER__/fileManagement";
+                } else if (data == 2)
+                    $.sticky("<font color='red'>已存在该文档标题！</font>");
+                else if (data == 0)
+                    $.sticky("<font color='orange'>抱歉，修改文档失败！</font>");
+            });
+        }
+        return false;
+    });
+    var ue = UE.getEditor('content',{
+        serverUrl :"{:U('Home/Plugin/ueditor')}"
+    });
+</script>
+<include file='footer' />

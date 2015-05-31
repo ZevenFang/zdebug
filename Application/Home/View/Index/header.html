@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh">
+<!--- HEADER -->
+<head>
+    <meta charset="utf-8">
+    <title>Zdebug-[title]</title>
+    <link rel="shortcut icon" href="__PUBLIC__/img/favicon.gif"/>
+    <!---CSS Files-->
+    <css rel="stylesheet" href="__PUBLIC__/css/master.css"/>
+    <css rel="stylesheet" href="__PUBLIC__/css/tables.css"/>
+    <!---jQuery Files-->
+    <js href="__PUBLIC__/js/jquery-1.7.1.min.js"/>
+    <js href="__PUBLIC__/js/jquery-ui-1.8.17.min.js"/>
+    <js href="__PUBLIC__/js/styler.js"/>
+    <js href="__PUBLIC__/js/jquery.tipTip.js"/>
+    <js href="__PUBLIC__/js/colorpicker.js"/>
+    <js href="__PUBLIC__/js/sticky.full.js"/>
+    <js href="__PUBLIC__/js/global.js"></js>
+    <js href="__PUBLIC__/js/flot/jquery.flot.min.js"/>
+    <js href="__PUBLIC__/js/flot/jquery.flot.resize.min.js"/>
+    <js href="__PUBLIC__/js/jquery.dataTables.min.js"/>
+    <!---Ueditor Files-->
+    <js href="__PUBLIC__/ueditor/ueditor.config.js" />
+    <js href="__PUBLIC__/ueditor/ueditor.all.min.js" />
+    <!---Fonts-->
+    <css href='__PUBLIC__/css/css.css' rel='stylesheet' type='text/css'/>
+    <css href='__PUBLIC__/css/css2.css' rel='stylesheet' type='text/css'/>
+</head>
+<body>
+<div class="header">
+    <a href="#"><img src="__PUBLIC__/img/logo.png" alt="Logo" /></a>
+    <div class="styler">
+        <ul class="styler-show">
+            <li><div id="colorSelector-top-bar"></div></li>
+            <li><div id="colorSelector-box-head"></div></li>
+        </ul>
+    </div>
+</div>
+<div class="top-bar">
+    <ul id="nav">
+        <li id="user-panel">
+            <a href="__CONTROLLER__/avatar"><img src="__ROOT__{$user.avatar|default='/Public/img/nav/usr-avatar.jpg'}" id="usr-avatar" alt=""/></a>
+            <div id="usr-info">
+                <p id="usr-name">欢迎，{$user.realname}。</p>
+                <p id="usr-notif">您当前使用的账号是 {$user.account} </p>
+                <p><a href="__CONTROLLER__/dashboard">个人中心</a><a href="__MODULE__/Back/logout">注销</a></p>
+            </div>
+        </li>
+        <li>
+            <ul id="top-nav">
+                <li class="nav-item">
+                    <a href="__CONTROLLER__/dashboard"><img src="__PUBLIC__/img/nav/dash{$dash}.png" alt="" /><p>个人中心</p></a>
+                </li>
+                <if condition="$user['permission'] eq 3">
+                    <li class="nav-item">
+                        <a href="__CONTROLLER__/projectManagement"><img src="__PUBLIC__/img/nav/flm{$flm}.png" alt="" /><p>项目管理</p></a>
+                    </li>
+                </if>
+                <if condition="$user['permission'] lt 4">
+                    <li class="nav-item">
+                        <a href="__CONTROLLER__/analytics"><img src="__PUBLIC__/img/nav/anlt{$anlt}.png" alt="" /><p>项目分析</p></a>
+                    </li>
+                </if>
+                <if condition="$user['permission'] lt 4">
+                    <li class="nav-item">
+                        <a href="__CONTROLLER__/fileManagement"><img src="__PUBLIC__/img/nav/typ{$typ}.png" alt="" /><p>项目文档</p></a>
+                    </li>
+                </if>
+                <if condition="$user['permission'] eq 3">
+                    <li class="nav-item">
+                        <a href="__CONTROLLER__/teamManagement"><img src="__PUBLIC__/img/nav/icn{$icn}.png" alt="" /><p>团队管理</p></a>
+                    </li>
+                </if>
+                <if condition="$user['permission'] gt 3">
+                    <li class="nav-item">
+                        <a href="__CONTROLLER__/deptManagement"><img src="__PUBLIC__/img/nav/tb{$tb}.png" alt="" /><p>部门管理</p></a>
+                    </li>
+                </if>
+                <if condition="$user['permission'] gt 3">
+                    <li class="nav-item">
+                        <a href="__CONTROLLER__/userManagement"><img src="__PUBLIC__/img/nav/grid{$grid}.png" alt="" /><p>用户管理</p></a>
+                    </li>
+                </if>
+                <li class="nav-item">
+                    <a href="http://naotu.baidu.com/edit.html" target="_blank"><img src="__PUBLIC__/img/nav/err.png" alt="" /><p>百度脑图</p></a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>

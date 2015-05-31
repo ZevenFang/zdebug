@@ -1,0 +1,51 @@
+<include file='header' title='修改bug'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+	<div class="box grid_9" style="margin-left: 13%">
+		<div class="box-head"><h2>{$bug.name}</h2></div>
+	  	<div class="box-content">
+	  		<form method="post" action="__CONTROLLER__/editBugAct/id/{$bug.id}">
+	     		<div class="form-row"><p class="form-label">Bug标题：</p><div class="form-item"><input name="name" value="{$bug.name}" type="text" placeholder="6-30个字符" pattern="^.{6,30}$" required/></div></div>
+	     		<div class="form-row"><p class="form-label">关键词：</p><div class="form-item"><input name="keywords" type="text" value='{$bug.keywords}'/></div></div>
+	     		<div class="form-row">
+		            <label class="form-label">Bug类型：</label>
+		            <div class="form-item">
+		              <select name='type'>
+						<option value="1" <if condition="$bug['type'] eq 1">selected</if>>代码错误</option>
+						<option value="2" <if condition="$bug['type'] eq 2">selected</if>>界面优化</option>
+						<option value="3" <if condition="$bug['type'] eq 3">selected</if>>设计缺陷</option>
+						<option value="4" <if condition="$bug['type'] eq 4">selected</if>>安全相关</option>
+						<option value="5" <if condition="$bug['type'] eq 5">selected</if>>性能问题</option>
+						<option value="6" <if condition="$bug['type'] eq 6">selected</if>>其他</option>
+		              </select>
+		            </div>
+		        </div>
+	     		<div class="form-row">
+		     		<textarea id="step" name="step" style="width:100%;height:70px;">{$bug.step}</textarea>
+				</div>
+				<div class="form-row">
+		     		<textarea id="expect" name="expect" style="width:100%;height:70px;">{$bug.expect}</textarea>
+				</div>
+				<div class="form-row"><input type="submit" class="button big blue" value="提交bug"></div>
+	     	</form>
+	  	</div>
+	</div>
+</div>
+<script>
+var ue = UE.getEditor('step',{
+    serverUrl :"{:U('Home/Plugin/ueditor')}",
+    toolbars: [
+               ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+               ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+              ],
+});
+var ue = UE.getEditor('expect',{
+    serverUrl :"{:U('Home/Plugin/ueditor')}",
+    toolbars: [
+               ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+               ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+              ],
+});
+
+</script>
+<include file='footer' />

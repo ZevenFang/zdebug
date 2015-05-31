@@ -1,0 +1,535 @@
+<include file='header' title='用户管理'/>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="box grid_9">
+        <div class="box-head"><h2>所有用户</h2></div>
+        <div class="box-content no-pad">
+            <ul class="table-toolbar">
+                <li onclick="newUser()"><a href="#"><img src="__PUBLIC__/img/icons/basic/plus.png" alt="" />添加用户</a></li>
+            </ul>
+            <table class="display" id="users">
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>账户名</th>
+                    <th>性别</th>
+                    <th>联系电话</th>
+                    <th>联系邮箱</th>
+                    <th>所在部门</th>
+                    <th>所在团队</th>
+                    <th>身份权限</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <foreach name="users" item="_user" >
+                    <tr>
+                        <td>{$_user.realname}</td>
+                        <td>{$_user.account}</td>
+                        <td class="center">
+                            <if condition="$_user['sex'] eq 0">
+                                男
+                                <elseif condition="$_user['sex'] eq 1"/>
+                                女
+                                <else/>
+                                未知
+                            </if>
+                        </td>
+                        <td>{$_user.phone}</td>
+                        <td>{$_user.email}</td>
+                        <td>{$_user.dept}</td>
+                        <td>{$_user.team}</td>
+                        <td>
+                            <if condition="$_user['permission'] eq 5">
+                                超级管理员
+                                <elseif condition="$_user['permission'] eq 4"/>
+                                管理员
+                                <elseif condition="$_user['permission'] eq 3"/>
+                                项目经理
+                                <elseif condition="$_user['permission'] eq 2"/>
+                                团队队长
+                                <elseif condition="$_user['permission'] eq 1"/>
+                                普通员工
+                                <else/>
+                                未知身份
+                            </if>
+                        </td>
+                        <td class="center" width="120px">
+                            <img src="__PUBLIC__/icon/pencil.png" alt="修改用户权限" data-id="{$_user.id}" onclick="modPermission(this)"/>
+                            <img src="__PUBLIC__/icon/shutdown.png" alt="删除用户" data-id="{$_user.id}" onclick="deleteUser(this)"/>
+                        </td>
+                    </tr>
+                </foreach>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="box grid_3">
+        <div id="admins">
+            <h3><a href="#">系统管理员</a></h3>
+            <div>
+                <h4><font color="gray">我的信息</font></h4><br/>
+                <p>
+                    账&nbsp;&nbsp;户&nbsp;&nbsp;名：{$user.account}<br>
+                    真实姓名：{$user.realname}<br>
+                    性　　别：
+                    <if condition="$user['sex'] eq 0">
+                        男
+                        <elseif condition="$user['sex'] eq 1"/>
+                        女
+                        <else/>
+                        未知性别
+                    </if><br>
+                    联系电话：{$user.phone}<br>
+                    联系邮箱：{$user.email}
+                </p>
+            </div>
+            <foreach name="admins" item="admin" >
+                <h3><a href="#">{$admin.realname}</a></h3>
+                <div>
+                    <p>
+                        账&nbsp;&nbsp;户&nbsp;&nbsp;名：{$admin.account}<br>
+                        真实姓名：{$admin.realname}<br>
+                        性　　别：
+                        <if condition="$admin['sex'] eq 0">
+                            男
+                            <elseif condition="$admin['sex'] eq 1"/>
+                            女
+                            <else/>
+                            未知性别
+                        </if><br>
+                        联系电话：{$admin.phone}<br>
+                        联系电话：{$admin.email}<br>
+                        上次登录时间：<br>{:date('Y-m-d　H:i:s',$admin['last'])}<br/><br/>
+                        <if condition="$user['permission'] eq 5">
+                            <input type="button" class="button orange" value="删除管理员" data-id="{$admin.id}" onclick="deleteAdmin(this)"/>
+                        </if>
+                    </p>
+                </div>
+            </foreach>
+        </div>
+    </div>
+    <if condition="$user['permission'] eq 5">
+        <!-- 彻底删除用户 -->
+        <div id="deleteAdmin" title="删除管理员">
+            是否删除该管理员？
+        </div>
+        <script>
+            var id = 0;
+            $( "#deleteAdmin" ).dialog({
+                autoOpen: false,
+                resizable: false,
+                modal: true,
+                buttons: {
+                    确认: function() {
+                        $( this ).dialog( "close" );
+                        $.get("__MODULE__/Back/deleteUser/id/"+id, function(data){
+                            if(data==1)
+                                location.reload();
+                            else if(data==0)
+                                $.sticky("<font color='orange'>抱歉，删除用户失败！</font>");
+                        });
+                    },
+                    关闭: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+            function deleteAdmin(admin){
+                id = admin.dataset.id;
+                $( "#deleteAdmin" ).dialog('open');
+            }
+        </script>
+    </if>
+    <div class="box grid_6">
+        <div class="box-head"><h2>未验证用户</h2></div>
+        <div class="box-content no-pad">
+            <table class="display" id="users_no_verify">
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>账户名</th>
+                    <th>性别</th>
+                    <th>联系电话</th>
+                    <th>联系邮箱</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <foreach name="users_no_verify" item="user" >
+                    <tr>
+                        <td>{$user.realname}</td>
+                        <td>{$user.account}</td>
+                        <td class="center">
+                            <if condition="$user['sex'] eq 0">
+                                男
+                                <elseif condition="$user['sex'] eq 1"/>
+                                女
+                                <else/>
+                                未知
+                            </if>
+                        </td>
+                        <td>{$user.phone}</td>
+                        <td>{$user.email}</td>
+                        <td class="center" width="120px">
+                            <img src="__PUBLIC__/icon/check.png" alt="通过验证" data-id="{$user.id}" onclick="userVerify(this)"/>
+                            <img src="__PUBLIC__/icon/shutdown.png" alt="拒绝请求" data-id="{$user.id}" onclick="rejectVerify(this)"/>
+                        </td>
+                    </tr>
+                </foreach>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="box grid_6">
+        <div class="box-head"><h2>已删除用户</h2></div>
+        <div class="box-content no-pad">
+            <table class="display" id="users_del">
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>账户名</th>
+                    <th>性别</th>
+                    <th>联系电话</th>
+                    <th>联系邮箱</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <foreach name="users_del" item="user" >
+                    <tr>
+                        <td>{$user.realname}</td>
+                        <td>{$user.account}</td>
+                        <td class="center">
+                            <if condition="$user['sex'] eq 0">
+                                男
+                                <elseif condition="$user['sex'] eq 1"/>
+                                女
+                                <else/>
+                                未知
+                            </if>
+                        </td>
+                        <td>{$user.phone}</td>
+                        <td>{$user.email}</td>
+                        <td class="center" width="120px">
+                            <img src="__PUBLIC__/icon/begin.png" alt="还原用户" data-id="{$user.id}" onclick="restoreUser(this)"/>
+                            <img src="__PUBLIC__/icon/shutdown.png" data-id="{$user.id}" alt="彻底删除用户" onclick="deleteUserComp(this)"/>
+                        </td>
+                    </tr>
+                </foreach>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- 增加用户窗口 -->
+    <div id="newUser" title="创建新用户">
+        <form method="post">
+            <div class="form-row">
+                <p class="form-label">真实姓名：</p><div class="form-item"><input type="text" name="realname"/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">联系邮箱：</p><div class="form-item"><input type="email" name='email'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">联系电话：</p><div class="form-item"><input type="text" name='phone'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">性别：</p>
+                <input type="radio" name='sex' value="0" checked/>男<input type="radio" name='sex' value="1"/>女
+            </div>
+            <div class="form-row">
+                <p class="form-label">账户名：</p><div class="form-item"><input type="text" name='account'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">密码：</p><div class="form-item"><input type="password" name='password' placeholder="六位以上(由数字字母下划线组成)"/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">重复密码：</p><div class="form-item"><input type="password" name='repwd'/></div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">分配部门：</p>
+                <div class="form-item">
+                    <select name='dept'>
+                        <option value="0">请选择...</option>
+                        <foreach name="depts" item="dept" >
+                            <option value="{$dept.id}">{$dept.name}</option>
+                        </foreach>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">授予权限：</p>
+                <div class="form-item">
+                    <select name='permission'>
+                        <option value="1">普通员工</option>
+                        <option value="3">项目经理</option>
+                        <option value="4">管理员</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- 删除用户 -->
+    <div id="deleteUser" title="删除用户">
+        是否删除该用户？
+    </div>
+    <!-- 彻底删除用户 -->
+    <div id="deleteUserComp" title="彻底删除用户">
+        是否彻底删除该用户？
+    </div>
+    <!-- 拒绝验证 -->
+    <div id="userVerify" title="通过验证">
+        <form method="post">
+            <div class="form-row">
+                <p class="form-label">分配部门：</p>
+                <div class="form-item">
+                    <select name='dept'>
+                        <option value="0">请选择...</option>
+                        <foreach name="depts" item="dept" >
+                            <option value="{$dept.id}">{$dept.name}</option>
+                        </foreach>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <p class="form-label">授予权限：</p>
+                <div class="form-item">
+                    <select name='permission'>
+                        <option value="1">普通员工</option>
+                        <option value="3">项目经理</option>
+                        <option value="4">管理员</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- 通过验证 -->
+    <div id="rejectVerify" title="拒绝验证">
+        拒绝验证将彻底删除该用户，是否确定？
+    </div>
+    <!--还原用户 -->
+    <div id="restoreUser" title="还原用户">
+        分配部门：
+        <select name='dept'>
+            <option value="0">请选择...</option>
+            <foreach name="depts" item="dept" >
+                <option value="{$dept.id}">{$dept.name}</option>
+            </foreach>
+        </select><br/><br/>
+        授予权限：
+        <select name='permission'>
+            <option value="1">普通员工</option>
+            <option value="3">项目经理</option>
+            <option value="4">管理员</option>
+        </select>
+    </div>
+    <!-- 修改用户权限 -->
+    <div id="modPermission" title="修改用户权限">
+        授予权限：
+        <select name='permission'>
+            <option value="1">普通员工</option>
+            <option value="3">项目经理</option>
+            <option value="4">管理员</option>
+        </select>
+    </div>
+</div>
+<script>
+    var id = 0;
+    $( "#newUser" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        buttons: {
+            添加: function() {
+                var pwd = $("#newUser input[name='password']").val();
+                if($("#newUser input[name='realname']").val().length==0)
+                    $.sticky("<font color='orange'>请填写用户真实名称！</font>");
+                else if($("#newUser input[name='email']").val().length==0)
+                    $.sticky("<font color='orange'>请填写邮箱！</font>");
+                else if(!/^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/.test($("#newUser input[name='email']").val()))
+                    $.sticky("<font color='orange'>请填写正确的邮箱地址！</font>");
+                else if(!/\d+/.test($("#newUser input[name='phone']").val()))
+                    $.sticky("<font color='orange'>请填写正确的联系电话！</font>");
+                else if($("#newUser select[name='dept'] option:selected").val()==0)
+                    $.sticky("<font color='orange'>请选择分配的部门！</font>");
+                else if(!/^\w{3,15}$/.test($("#newUser input[name='account']").val()))
+                    $.sticky("<font color='orange'>账户名在3～15位之间！</font>");
+                else if(!/^\w{6,32}$/.test(pwd))
+                    $.sticky("<font color='orange'>密码在6～32位之间！</font>");
+                else if($("#newUser input[name='repwd']").val()!=pwd)
+                    $.sticky("<font color='orange'>两次输入的密码不一致！</font>");
+                else{
+                    $.post("__MODULE__/Back/newUser", $("#newUser form").serialize(),function(data){
+                        if(data==1){
+                            location.reload();
+                        }else if(data==2)
+                            $.sticky("<font color='orange'>已存在该账户名！</font>");
+                        else if(data==0){
+                            $.sticky("<font color='orange'>抱歉，添加用户失败！</font>");
+                            $( '#newUser' ).dialog( "close" );
+                        }
+                    });
+                }
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#deleteUser" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确认: function() {
+                $( this ).dialog( "close" );
+                $.get("__MODULE__/Back/deleteUser/id/"+id, function(data){
+                    if(data==1)
+                        location.reload();
+                    else if(data==0)
+                        $.sticky("<font color='orange'>抱歉，删除用户失败！</font>");
+                });
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#deleteUserComp" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确认: function() {
+                $( this ).dialog( "close" );
+                $.get("__MODULE__/Back/deleteUserComp/id/"+id, function(data){
+                    if(data==1)
+                        location.reload();
+                    else if(data==0)
+                        $.sticky("<font color='orange'>抱歉，彻底删除用户失败！</font>");
+                });
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#restoreUser" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        buttons: {
+            确认: function() {
+                var dept = $("#restoreUser select[name='dept'] option:selected").val();
+                var per = $("#restoreUser select[name='permission'] option:selected").val();
+                if(dept==0)
+                    $.sticky("<font color='orange'>请选择分配的部门！</font>");
+                else {
+                    $(this).dialog("close");
+                    $.get("__MODULE__/Back/restoreUser/id/" + id + "/dept/" + dept + "/permission/" + per, function (data) {
+                        if (data == 1)
+                            location.reload();
+                        else if (data == 0)
+                            $.sticky("<font color='orange'>抱歉，还原用户失败！</font>");
+                    });
+                }
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#modPermission" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        buttons: {
+            确认: function() {
+                var per = $("#modPermission select[name='permission'] option:selected").val();
+                $(this).dialog("close");
+                $.get("__MODULE__/Back/modPermission/id/" + id + "/permission/" + per, function (data) {
+                    if (data == 1)
+                        location.reload();
+                    else if (data == 0)
+                        $.sticky("<font color='orange'>抱歉，还原用户失败！</font>");
+                });
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#rejectVerify" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确认: function() {
+                $( this ).dialog( "close" );
+                $.get("__MODULE__/Back/rejectVerify/id/"+id, function(data){
+                    if(data==1)
+                        location.reload();
+                    else if(data==0)
+                        $.sticky("<font color='orange'>抱歉，拒绝用户认证失败！</font>");
+                });
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    $( "#userVerify" ).dialog({
+        autoOpen: false,
+        resizable: false,
+        modal: true,
+        buttons: {
+            确认: function() {
+                if($("#userVerify select[name='dept'] option:selected").val()==0)
+                    $.sticky("<font color='orange'>请选择分配的部门！</font>");
+                else {
+                    $(this).dialog("close");
+                    $.post("__MODULE__/Back/userVerify/id/" + id, $("#userVerify form").serialize(), function (data) {
+                        if (data == 1)
+                            location.reload();
+                        else if (data == 0)
+                            $.sticky("<font color='orange'>抱歉，认证用户失败！</font>");
+                    });
+                }
+            },
+            关闭: function() {
+                $( this ).dialog( "close" );
+            }
+        }
+    });
+    function newUser(){
+        $( "#newUser" ).dialog('open');
+    }
+    function deleteUser(user){
+        id = user.dataset.id;
+        $( "#deleteUser" ).dialog('open');
+    }
+    function deleteUserComp(user){
+        id = user.dataset.id;
+        $( "#deleteUserComp" ).dialog('open');
+    }
+    function restoreUser(user){
+        id = user.dataset.id;
+        $( "#restoreUser" ).dialog('open');
+    }
+    function modPermission(user){
+        id = user.dataset.id;
+        $( "#modPermission" ).dialog('open');
+    }
+    function rejectVerify(user){
+        id = user.dataset.id;
+        $( "#rejectVerify" ).dialog('open');
+    }
+    function userVerify(user){
+        id = user.dataset.id;
+        $( "#userVerify" ).dialog('open');
+    }
+    $('#admins').accordion({fillSpace:true});
+    $('#users,#users_no_verify,#users_del').dataTable( {
+        "bJQueryUI": true
+    }); /* For the data tables */
+    $('#users img,#users_no_verify img,#users_del img').tipTip({attribute: "alt", delay: "100", defaultPosition: "top"});
+    $('#users img,#users_no_verify img,#users_del img').attr('style','width: 20px;cursor: pointer');
+</script>
+<include file='footer' />

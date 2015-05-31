@@ -1,0 +1,26 @@
+<include file='header' title='头像设置'/>
+<script src="__PUBLIC__/js/forms/fileinput.js"></script>
+<!--- CONTENT AREA -->
+<div class="content container_12">
+    <div class="box grid_7" style="margin-left: 22%">
+        <div class="box-head"><h2>上传头像</h2></div>
+        <div class="box-content">
+            <p id="error-back">
+                系统会自动裁剪图片，建议上传正方形的图片作为头像。<br/>
+                支持JPG,JPEG,GIF,PNG文件的上传，文件大小不超过3M。
+            </p>
+            <form action="__MODULE__/Back/avatar" encType="multipart/form-data"  method="post" >
+                <div class="form-row">
+                    <label class="form-label">选择图片：</label>
+                    <div class="form-item file-upload">
+                        <input />
+                        <input class="filebase" type="file" id="file" name="avatar"/>
+                        <span class="form-icon"><img src="__PUBLIC__/icon/copy.png" width="100%"></span>
+                    </div>
+                </div>
+                <input type="submit" class="button big green" value="上传文件">
+            </form>
+        </div>
+    </div>
+</div>
+<include file='footer' />
