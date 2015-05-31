@@ -251,142 +251,6 @@
             联系电话：{$leader.phone}<br><br>
             联系电话：{$leader.email}<br><br><br>
         </div>
-        <if condition="$user['permission'] eq 3">
-            <!-- 我指派出去的任务 -->
-            <div class="box grid_6">
-                <div class="box-head"><h2>指派出去的任务</h2></div>
-                <div class="box-content no-pad">
-                    <table class="display" id="myTasks">
-                        <thead>
-                        <tr>
-                            <th>标题</th>
-                            <th>类型</th>
-                            <th>指派给团队</th>
-                            <th>是否解决</th>
-                            <th>操作</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <foreach name="myTasks" item="task" >
-                            <tr class="odd gradeX">
-                                <td>{$task.name}</td>
-                                <td>
-                                    <font color="orange">
-                                        <if condition="$task['type'] eq 1">设计
-                                            <elseif condition="$task['type'] eq 2"/>开发
-                                            <elseif condition="$task['type'] eq 3"/>测试
-                                            <elseif condition="$task['type'] eq 4"/>研究
-                                            <elseif condition="$task['type'] eq 5"/>讨论
-                                            <elseif condition="$task['type'] eq 6"/>界面
-                                            <elseif condition="$task['type'] eq 7"/>事务
-                                            <else />其他
-                                        </if>
-                                    </font>
-                                </td>
-                                <td>{$task.assignedTo}</td>
-                                <td class="center" data-id="{$task.id}">
-                                    <if condition="$task['finished'] eq 1">
-                                        <font color='green'>已解决</font>
-                                        <else />
-                                        <font color='orange'>未解决</font>
-                                    </if>
-                                </td>
-                                <td>
-                                    <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/taskInfo/remark/1/id/{$task.id}'"/>
-                                    <img src="__PUBLIC__/icon/pencil.png" alt="编辑" onclick="location.href='__CONTROLLER__/editTask/id/{$task.id}'"/>
-                                    <if condition="$task['finished'] eq 0">
-                                        <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$task.id}" onclick='fireTask(this)'/>
-                                    </if>
-                                    <empty name="task.assignedTo">
-                                        <img src="__PUBLIC__/icon/begin.png" alt="指派给" data-id='{$task.id}' onclick="taskRemark(this)"/>
-                                    </empty>
-                                    <if condition="$task['finished'] eq 1">
-                                        <img src="__PUBLIC__/icon/begin.png" alt="驳回" data-id='{$task.id}' onclick="rejectTask(this)"/>
-                                    </if>
-                                </td>
-                            </tr>
-                        </foreach>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- 指派任务对话框 -->
-            <div id="taskDialog" title="分配任务">
-                <form action="post">
-                    <div class="form-row">指派给：
-                        <div class="form-item">
-                            <select name='assignedTo'>
-                                <option value='0' selected>请选择团队</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <textarea id="remark" name="remark" style="width:100%;height:300px;"><font color='gray'>任务备注，可上传附件...</font></textarea>
-                    </div>
-                    <input type="submit" value="分配" class="button big green"/>
-                    <input type="button" value="取消" class="button big orange"/>
-                </form>
-            </div>
-            <script>
-                var id = 0;
-                var hasTeam = false;
-                $("#taskDialog form").submit(function(){
-                    $("#taskDialog form").append("<input type='hidden' name='id' value='"+id+"'/>");
-                    if($("#taskDialog option:selected").val()==0){
-                        $.sticky("<font color='red'>请选择一个团队！</font>");
-                        return false;
-                    }
-                    $.ajax({
-                        type: "POST",
-                        url: "__MODULE__/Back/assignTask",
-                        data: $(this).serialize(),
-                        success: function(data){
-                            if(data==0)
-                                $.sticky("<font color='orange'>抱歉，任务分配失败！</font>");
-                            else if(data==1){
-                                $( "#taskDialog" ).dialog( "close" );
-                                location.reload();
-                            }
-                        }
-                    });
-                    return false;
-                });
-                function addTeams(){
-                    $.ajax({
-                        type: "POST",
-                        url: "__MODULE__/Back/getTeams",
-                        success: function(data){
-                            var teams = JSON.parse(data);
-                            for (i=0;i<teams.length;i++)
-                                $("#taskDialog select").append("<option value='"+teams[i].id+"'>"+teams[i].name+"</option>");
-                        }
-                    });
-                }
-                $("#taskDialog input[type='button']").click(function(){
-                    $( "#taskDialog" ).dialog( "close" );
-                });
-                $( "#taskDialog" ).dialog({
-                    autoOpen: false,
-                    resizable: false,
-                    modal: true
-                });
-                function taskRemark(task){
-                    id = task.dataset.id;
-                    $( "#taskDialog" ).dialog( "open" );
-                    if(!hasTeam) {
-                        addTeams();
-                        hasTeam = true;
-                    }
-                }
-                var ue = UE.getEditor('remark',{
-                    serverUrl :"{:U('Home/Plugin/ueditor')}",
-                    toolbars: [
-                        ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
-                        ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
-                    ]
-                });
-            </script>
-        </if>
         <!-- 我收到的任务 -->
         <div class="box grid_6">
             <div class="box-head"><h2>指派给我的任务</h2></div>
@@ -430,6 +294,190 @@
                                 <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/taskInfo/remark/1/id/{$task.id}'"/>
                                 <if condition="$task['finished'] eq 0">
                                     <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$task.id}" onclick='fireTask(this)'/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div><if condition="$user['permission'] eq 3">
+        <!-- 我指派出去的任务 -->
+        <div class="box grid_6">
+            <div class="box-head"><h2>指派出去的任务</h2></div>
+            <div class="box-content no-pad">
+                <table class="display" id="myTasks">
+                    <thead>
+                    <tr>
+                        <th>标题</th>
+                        <th>类型</th>
+                        <th>指派给团队</th>
+                        <th>是否解决</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="myTasks" item="task" >
+                        <tr class="odd gradeX">
+                            <td>{$task.name}</td>
+                            <td>
+                                <font color="orange">
+                                    <if condition="$task['type'] eq 1">设计
+                                        <elseif condition="$task['type'] eq 2"/>开发
+                                        <elseif condition="$task['type'] eq 3"/>测试
+                                        <elseif condition="$task['type'] eq 4"/>研究
+                                        <elseif condition="$task['type'] eq 5"/>讨论
+                                        <elseif condition="$task['type'] eq 6"/>界面
+                                        <elseif condition="$task['type'] eq 7"/>事务
+                                        <else />其他
+                                    </if>
+                                </font>
+                            </td>
+                            <td>{$task.assignedTo}</td>
+                            <td class="center" data-id="{$task.id}">
+                                <if condition="$task['finished'] eq 1">
+                                    <font color='green'>已解决</font>
+                                    <else />
+                                    <font color='orange'>未解决</font>
+                                </if>
+                            </td>
+                            <td>
+                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/taskInfo/remark/1/id/{$task.id}'"/>
+                                <img src="__PUBLIC__/icon/pencil.png" alt="编辑" onclick="location.href='__CONTROLLER__/editTask/id/{$task.id}'"/>
+                                <if condition="$task['finished'] eq 0">
+                                    <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$task.id}" onclick='fireTask(this)'/>
+                                </if>
+                                <empty name="task.assignedTo">
+                                    <img src="__PUBLIC__/icon/begin.png" alt="指派给" data-id='{$task.id}' onclick="taskRemark(this)"/>
+                                </empty>
+                                <if condition="$task['finished'] eq 1">
+                                    <img src="__PUBLIC__/icon/begin.png" alt="驳回" data-id='{$task.id}' onclick="rejectTask(this)"/>
+                                </if>
+                            </td>
+                        </tr>
+                    </foreach>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 指派任务对话框 -->
+        <div id="taskDialog" title="分配任务">
+            <form action="post">
+                <div class="form-row">指派给：
+                    <div class="form-item">
+                        <select name='assignedTo'>
+                            <option value='0' selected>请选择团队</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <textarea id="remark" name="remark" style="width:100%;height:300px;"><font color='gray'>任务备注，可上传附件...</font></textarea>
+                </div>
+                <input type="submit" value="分配" class="button big green"/>
+                <input type="button" value="取消" class="button big orange"/>
+            </form>
+        </div>
+        <script>
+            var id = 0;
+            var hasTeam = false;
+            $("#taskDialog form").submit(function(){
+                $("#taskDialog form").append("<input type='hidden' name='id' value='"+id+"'/>");
+                if($("#taskDialog option:selected").val()==0){
+                    $.sticky("<font color='red'>请选择一个团队！</font>");
+                    return false;
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "__MODULE__/Back/assignTask",
+                    data: $(this).serialize(),
+                    success: function(data){
+                        if(data==0)
+                            $.sticky("<font color='orange'>抱歉，任务分配失败！</font>");
+                        else if(data==1){
+                            $( "#taskDialog" ).dialog( "close" );
+                            location.reload();
+                        }
+                    }
+                });
+                return false;
+            });
+            function addTeams(){
+                $.ajax({
+                    type: "POST",
+                    url: "__MODULE__/Back/getTeams",
+                    success: function(data){
+                        var teams = JSON.parse(data);
+                        for (i=0;i<teams.length;i++)
+                            $("#taskDialog select").append("<option value='"+teams[i].id+"'>"+teams[i].name+"</option>");
+                    }
+                });
+            }
+            $("#taskDialog input[type='button']").click(function(){
+                $( "#taskDialog" ).dialog( "close" );
+            });
+            $( "#taskDialog" ).dialog({
+                autoOpen: false,
+                resizable: false,
+                modal: true
+            });
+            function taskRemark(task){
+                id = task.dataset.id;
+                $( "#taskDialog" ).dialog( "open" );
+                if(!hasTeam) {
+                    addTeams();
+                    hasTeam = true;
+                }
+            }
+            var ue = UE.getEditor('remark',{
+                serverUrl :"{:U('Home/Plugin/ueditor')}",
+                toolbars: [
+                    ['fullscreen', 'source', 'inserttitle', 'undo', 'redo', 'bold','italic','underline', 'insertcode', 'fontfamily', 'fontsize'],
+                    ['link', 'emotion', 'simpleupload', 'insertimage', 'background', 'attachment']
+                ]
+            });
+        </script>
+    </if>
+        <!-- 指派给我的bug -->
+        <div class="box grid_6">
+            <div class="box-head"><h2>指派给我的bug</h2></div>
+            <div class="box-content no-pad">
+                <table class="display" id="bugs">
+                    <thead>
+                    <tr>
+                        <th>Bug标题</th>
+                        <th>类型</th>
+                        <th>指派人</th>
+                        <th>是否解决</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <foreach name="bugs" item="bug" >
+                        <tr class="odd gradeX">
+                            <td>{$bug.name}</td>
+                            <td>
+                                <font color="orange">
+                                    <if condition="$bug['type'] eq 1">代码错误
+                                        <elseif condition="$bug['type'] eq 2"/>界面优化
+                                        <elseif condition="$bug['type'] eq 3"/>设计缺陷
+                                        <elseif condition="$bug['type'] eq 4"/>安全相关
+                                        <elseif condition="$bug['type'] eq 5"/>性能问题
+                                        <else />其他
+                                    </if>
+                                </font>
+                            </td>
+                            <td>{$bug.assigner}</td>
+                            <td class="center" data-id="{$bug.id}">
+                                <if condition="$bug['finished'] eq 1">
+                                    <font color='green'>已解决</font>
+                                    <else />
+                                    <font color='orange'>未解决</font>
+                                </if>
+                            </td>
+                            <td>
+                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/bugInfo/remark/1/id/{$bug.id}'"/>
+                                <if condition="$bug['finished'] eq 0">
+                                    <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$bug.id}" onclick='fireBug(this)'/>
                                 </if>
                             </td>
                         </tr>
@@ -493,55 +541,6 @@
                 </div>
             </div>
         </if>
-        <!-- 指派给我的bug -->
-        <div class="box grid_6">
-            <div class="box-head"><h2>指派给我的bug</h2></div>
-            <div class="box-content no-pad">
-                <table class="display" id="bugs">
-                    <thead>
-                    <tr>
-                        <th>Bug标题</th>
-                        <th>类型</th>
-                        <th>指派人</th>
-                        <th>是否解决</th>
-                        <th>操作</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <foreach name="bugs" item="bug" >
-                        <tr class="odd gradeX">
-                            <td>{$bug.name}</td>
-                            <td>
-                                <font color="orange">
-                                    <if condition="$bug['type'] eq 1">代码错误
-                                        <elseif condition="$bug['type'] eq 2"/>界面优化
-                                        <elseif condition="$bug['type'] eq 3"/>设计缺陷
-                                        <elseif condition="$bug['type'] eq 4"/>安全相关
-                                        <elseif condition="$bug['type'] eq 5"/>性能问题
-                                        <else />其他
-                                    </if>
-                                </font>
-                            </td>
-                            <td>{$bug.assigner}</td>
-                            <td class="center" data-id="{$bug.id}">
-                                <if condition="$bug['finished'] eq 1">
-                                    <font color='green'>已解决</font>
-                                    <else />
-                                    <font color='orange'>未解决</font>
-                                </if>
-                            </td>
-                            <td>
-                                <img src="__PUBLIC__/icon/search.png" alt="详情" onclick="location.href='__CONTROLLER__/bugInfo/remark/1/id/{$bug.id}'"/>
-                                <if condition="$bug['finished'] eq 0">
-                                    <img src="__PUBLIC__/icon/check.png" alt="解决" data-id="{$bug.id}" onclick='fireBug(this)'/>
-                                </if>
-                            </td>
-                        </tr>
-                    </foreach>
-                    </tbody>
-                </table>
-            </div>
-        </div>
         <!-- 解决任务对话框 -->
         <div id="fireTaskPrompt" title="提示">
             是否确定已经解决这个任务？

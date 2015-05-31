@@ -208,6 +208,7 @@ class BackController extends Controller
         $data = $_POST;
         unset($data['id']);
         $data['assigner'] = $user['id'];
+        $data['assignedTo'] = M('team')->where(array('id'=>$_POST['id']))->getField('leader');
         echo M('task')->where("id={$_POST['id']}")->save($data)?1:0;
     }
 
