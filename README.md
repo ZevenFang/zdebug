@@ -13,9 +13,9 @@ ThinkPHP 是一个免费开源的，快速、简单的面向对象的 轻量级P
 UEditor 是由百度「FEX前端研发团队」开发的所见即所得富文本web编辑器，具有轻量，可定制，注重用户体验等特点，开源基于MIT协议，允许自由使用和修改代码。
 
 
-#注意事项
+##注意事项
 
-本项目演示地址为<a href='http://zdebug.oschina.mopaas.com/'>http://zdebug.oschina.mopaas.com/</a>，测试帐号：
-用户名：test
-密码：123456
+本项目演示地址为<a href='http://zdebug.oschina.mopaas.com/'>http://zdebug.oschina.mopaas.com/</a>，测试帐号：<br>
+用户名：test<br>
+密码：123456<br>
 如果页面显示异常，请注意浏览器是否拦截系统的css文件，并且解除拦截再继续演示项目。
