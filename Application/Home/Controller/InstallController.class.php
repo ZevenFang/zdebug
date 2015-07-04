@@ -18,8 +18,10 @@ class InstallController extends Controller
     function step2()
     {
         $conn = @mysql_connect($_POST['host'].':'.$_POST['port'],$_POST['u'],$_POST['p']);
-        if(empty($conn))
-            die('数据库连接失败');
+        if(empty($conn)){
+			header("Content-Type: text/html; charset=utf-8");
+            die('<h1>数据库连接失败！</h1>');
+		}
         mysql_query("set names utf8");
         mysql_query("create database {$_POST['dbname']}");
         mysql_query("use {$_POST['dbname']}");
@@ -33,7 +35,7 @@ class InstallController extends Controller
         $data['sex'] = $_POST['sex'];
         $data['ip'] = $_SERVER["REMOTE_ADDR"];
         $data['last'] = time();
-		$sql = "INSERT INTO zd_user(account,password,realname,sex,verified,ip,last,permission)VALUES('".$data['account']."','".$data['password']."','".$data['realname']."',{$data['sex']},1,'".$data['ip']."',{$data['last']},5)";
+		$sql = "INSERT INTO zd_user(id,account,password,realname,sex,verified,ip,last,permission)VALUES(1,'".$data['account']."','".$data['password']."','".$data['realname']."',{$data['sex']},1,'".$data['ip']."',{$data['last']},5)";
         mysql_query($sql);
         mysql_close($conn);
         $config = array(
