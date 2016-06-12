@@ -15,7 +15,4 @@ UEditor 是由百度「FEX前端研发团队」开发的所见即所得富文本
 
 ##注意事项
 
-本项目演示地址为<a href='http://zdebug.sinaapp.com/'>http://zdebug.sinaapp.com/</a>，测试帐号：<br>
-用户名：long1<br>
-密码：110112<br>
 如果页面显示异常，请注意浏览器是否拦截系统的css文件，并且解除拦截再继续演示项目。
